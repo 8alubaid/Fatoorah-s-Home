@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Fatoorah",
+    "slug": "fatoorah",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "fatoorah",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0B0B0C"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fatoorah.app"
+    },
+    "android": {
+      "package": "com.fatoorah.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B0B0C"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": ["expo-router"]
+  }
+}

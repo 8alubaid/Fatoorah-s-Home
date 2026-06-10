@@ -1,0 +1,185 @@
+import React from "react";
+import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { spacing, radius, categoryColor, categoryEmoji } from "../../src/theme";
+import { useTheme, useThemedStyles } from "../../src/ThemeContext";
+import { Card, ScreenHeader, SectionTitle, ProgressBar, Avatar, EmptyState } from "../../src/components/ui";
+import {
+  totalForMonth,
+  totalForWeek,
+  categoryTotals,
+  recentTransactions,
+} from "../../src/data";
+import { money, shortDate, monthLabel, TODAY } from "../../src/utils";
+import { useBank } from "../../src/bank/BankContext";
+
+const MONTHLY_BUDGET = 4000;
+
+export default function Dashboard() {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
+  const { connected, transactions, accounts, disconnect } = useBank();
+
+  if (!connected) {
+    return (
+      <SafeAreaView style={styles.safe} edges={["top"]}>
+        <ScreenHeader title="Fatoorah" subtitle={`Hello 👋 · ${monthLabel(TODAY)}`} />
+        <EmptyState
+          emoji="🏦"
+          title="Connect your bank"
+          message="Link your SNB account to automatically import receipts and track your spending. Your login stays with your bank — Fatoorah only gets read-only access."
+          buttonLabel="Connect bank"
+          onPress={() => router.push("/connect")}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  const month = totalForMonth(transactions, TODAY);
+  const week = totalForWeek(transactions, TODAY);
+  const cats = categoryTotals(transactions, TODAY);
+  const recent = recentTransactions(transactions, 4);
+  const topThree = cats.slice(0, 3);
+
+  const summary =
+    `You've spent ${money(month)} so far this ${monthLabel(TODAY).split(" ")[0]}. ` +
+    (cats[0]
+      ? `${cats[0].category} is your biggest category at ${money(cats[0].amount)}. `
+      : "") +
+    (month <= MONTHLY_BUDGET
+      ? `You're ${money(MONTHLY_BUDGET - month)} under your ${money(MONTHLY_BUDGET)} budget — nice pace. 👍`
+      : `You're ${money(month - MONTHLY_BUDGET)} over budget this month. ⚠️`);
+
+  return (
+    <SafeAreaView style={styles.safe} edges={["top"]}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScreenHeader title="Fatoorah" subtitle={`Hello 👋 · ${monthLabel(TODAY)}`} />
+
+        {/* Hero: month + week totals */}
+        <Card style={styles.hero}>
+          <Text style={styles.heroLabel}>Spent this month</Text>
+          <Text style={styles.heroAmount}>{money(month)}</Text>
+          <View style={styles.heroRow}>
+            <View>
+              <Text style={styles.heroSmallLabel}>This week</Text>
+              <Text style={styles.heroSmallValue}>{money(week)}</Text>
+            </View>
+            <View style={styles.heroDivider} />
+            <View>
+              <Text style={styles.heroSmallLabel}>Transactions</Text>
+              <Text style={styles.heroSmallValue}>{transactions.length}</Text>
+            </View>
+          </View>
+        </Card>
+
+        {/* Linked accounts */}
+        <SectionTitle right="Manage">Linked accounts</SectionTitle>
+        <Card style={{ paddingVertical: spacing.xs }}>
+          {accounts.map((a, i) => (
+            <View key={a.id} style={[styles.acctRow, i < accounts.length - 1 && styles.divider]}>
+              <Avatar emoji="🏦" color={colors.primary} />
+              <View style={styles.acctMid}>
+                <Text style={styles.acctName}>{a.name}</Text>
+                <Text style={styles.acctSub}>{a.bankName} · {a.mask}</Text>
+              </View>
+              <Text style={[styles.acctBalance, a.balance < 0 && { color: colors.danger }]}>
+                {money(a.balance)}
+              </Text>
+            </View>
+          ))}
+          <Pressable onPress={disconnect} style={styles.disconnect}>
+            <Ionicons name="unlink" size={16} color={colors.danger} />
+            <Text style={styles.disconnectText}>Disconnect</Text>
+          </Pressable>
+        </Card>
+
+        {/* AI summary */}
+        <SectionTitle>AI Summary ✨</SectionTitle>
+        <Card style={styles.aiCard}>
+          <Text style={styles.aiText}>{summary}</Text>
+        </Card>
+
+        {/* Budget progress */}
+        <SectionTitle right={`${Math.round((month / MONTHLY_BUDGET) * 100)}%`}>
+          Budget progress
+        </SectionTitle>
+        <Card>
+          <View style={styles.budgetRow}>
+            <Text style={styles.budgetSpent}>{money(month)}</Text>
+            <Text style={styles.budgetMax}>of {money(MONTHLY_BUDGET)}</Text>
+          </View>
+          <ProgressBar
+            value={month}
+            max={MONTHLY_BUDGET}
+            color={month > MONTHLY_BUDGET ? colors.danger : colors.success}
+          />
+          {topThree.map((c) => (
+            <View key={c.category} style={styles.catLine}>
+              <View style={[styles.dot, { backgroundColor: categoryColor(c.category) }]} />
+              <Text style={styles.catName}>
+                {categoryEmoji(c.category)} {c.category}
+              </Text>
+              <Text style={styles.catAmount}>{money(c.amount)}</Text>
+            </View>
+          ))}
+        </Card>
+
+        {/* Recent transactions */}
+        <SectionTitle>Recent receipts</SectionTitle>
+        <Card style={{ paddingVertical: spacing.xs }}>
+          {recent.map((r, i) => (
+            <View key={r.id} style={[styles.receiptRow, i < recent.length - 1 && styles.divider]}>
+              <Avatar emoji={categoryEmoji(r.category)} color={categoryColor(r.category)} />
+              <View style={styles.receiptMid}>
+                <Text style={styles.receiptName}>{r.merchant}</Text>
+                <Text style={styles.receiptSub}>
+                  {r.category} · {shortDate(r.date)}
+                </Text>
+              </View>
+              <Text style={styles.receiptAmount}>{money(r.amount)}</Text>
+            </View>
+          ))}
+        </Card>
+
+        <View style={{ height: spacing.xl }} />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const makeStyles = (colors) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.bg },
+    scroll: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
+    hero: { backgroundColor: colors.primary, borderColor: colors.primary, marginTop: spacing.sm },
+    heroLabel: { color: colors.onPrimaryMuted, fontSize: 14, fontWeight: "600" },
+    heroAmount: { color: colors.onPrimary, fontSize: 40, fontWeight: "800", marginTop: 4, letterSpacing: -1 },
+    heroRow: { flexDirection: "row", alignItems: "center", marginTop: spacing.lg },
+    heroDivider: { width: 1, height: 32, backgroundColor: colors.onPrimaryDivider, marginHorizontal: spacing.xl },
+    heroSmallLabel: { color: colors.onPrimaryMuted, fontSize: 12 },
+    heroSmallValue: { color: colors.onPrimary, fontSize: 18, fontWeight: "700", marginTop: 2 },
+    acctRow: { flexDirection: "row", alignItems: "center", paddingVertical: spacing.md },
+    acctMid: { flex: 1, marginLeft: spacing.md },
+    acctName: { color: colors.text, fontSize: 15, fontWeight: "600" },
+    acctSub: { color: colors.textFaint, fontSize: 12, marginTop: 2 },
+    acctBalance: { color: colors.text, fontSize: 15, fontWeight: "700" },
+    divider: { borderBottomWidth: 1, borderBottomColor: colors.border },
+    disconnect: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: spacing.md },
+    disconnectText: { color: colors.danger, fontSize: 13, fontWeight: "600", marginLeft: 6 },
+    aiCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary + "55" },
+    aiText: { color: colors.text, fontSize: 15, lineHeight: 22 },
+    budgetRow: { flexDirection: "row", alignItems: "flex-end", marginBottom: spacing.md },
+    budgetSpent: { color: colors.text, fontSize: 22, fontWeight: "800" },
+    budgetMax: { color: colors.textMuted, fontSize: 14, marginLeft: 6, marginBottom: 2 },
+    catLine: { flexDirection: "row", alignItems: "center", marginTop: spacing.md },
+    dot: { width: 10, height: 10, borderRadius: 5, marginRight: spacing.sm },
+    catName: { color: colors.textMuted, fontSize: 14, flex: 1 },
+    catAmount: { color: colors.text, fontSize: 14, fontWeight: "600" },
+    receiptRow: { flexDirection: "row", alignItems: "center", paddingVertical: spacing.md },
+    receiptMid: { flex: 1, marginLeft: spacing.md },
+    receiptName: { color: colors.text, fontSize: 15, fontWeight: "600" },
+    receiptSub: { color: colors.textFaint, fontSize: 12, marginTop: 2 },
+    receiptAmount: { color: colors.text, fontSize: 15, fontWeight: "700" },
+  });

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(node --version)",
+      "PowerShell(npm --version)",
+      "PowerShell(npx --version)",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:8081/index.bundle?platform=web&dev=true\" -UseBasicParsing -TimeoutSec 300; \"HTTP \" + $r.StatusCode + \" | bundle bytes=\" + $r.Content.Length } catch { \"ERR: \" + $_.Exception.Message; if \\($_.ErrorDetails\\) { $_.ErrorDetails.Message.Substring\\(0,[Math]::Min\\(1500,$_.ErrorDetails.Message.Length\\)\\) } })",
+      "mcp__Claude_Preview__preview_start",
+      "PowerShell($rv = \\(Get-Content node_modules/react/package.json | ConvertFrom-Json\\).version; \"react is $rv\"; npm install \\(\"react-dom@\" + $rv\\) --save-exact --silent 2>&1 | Select-Object -Last 3; \"react-dom now \" + \\(Get-Content node_modules/react-dom/package.json | ConvertFrom-Json\\).version)",
+      "WebFetch(domain:docs.leantech.me)",
+      "WebSearch"
+    ]
+  }
+}
