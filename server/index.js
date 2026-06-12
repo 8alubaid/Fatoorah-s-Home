@@ -118,32 +118,35 @@ function dataHeaders() {
 // the LinkSDK callback exposes it, in which case this isn't called.)
 async function resolveEntity(oauth, customerId) {
   const key = String(customerId);
-  if (entityByCustomer.has(key)) return entityByCustomer.get(key);
 
-  // API fallback: read entities from the customer record/list.
-  const tryList = async (url) => {
+  // GET /customers/v1/{id}/entities returns a BARE JSON array (confirmed via the
+  // debug endpoint), e.g. [] or [{ id, ... }].
+  const fromApi = async () => {
     try {
-      const r = await fetch(url, { headers: { Authorization: `Bearer ${oauth}` } });
+      const r = await fetch(`${API_BASE}/customers/v1/${customerId}/entities`, {
+        headers: { Authorization: `Bearer ${oauth}` },
+      });
       if (!r.ok) return null;
       const data = await r.json();
-      const list = data.entities || data.payload?.entities || data.data || [];
-      if (list.length) return String(list[list.length - 1].id || list[list.length - 1].entity_id);
+      const list = Array.isArray(data) ? data : data.entities || data.data || [];
+      if (list.length) {
+        const last = list[list.length - 1];
+        return String(last.id || last.entity_id);
+      }
     } catch {}
     return null;
   };
-  const apiEntity =
-    (await tryList(`${API_BASE}/customers/v1/${customerId}/entities`)) ||
-    (await tryList(`${API_BASE}/customers/v1/${customerId}`));
-  if (apiEntity) return apiEntity;
 
-  // Last resort: wait briefly in case the webhook is still in flight.
-  for (let i = 0; i < 16 && !entityByCustomer.has(key); i++) await sleep(500);
-  if (entityByCustomer.has(key)) return entityByCustomer.get(key);
-
-  throw new Error(
-    "Could not determine entity_id. Either pass it from the LinkSDK callback, or " +
-      "configure the entity.created webhook (see server/README.md)."
-  );
+  // Poll the entities API + the webhook cache (~15s). After the LinkSDK SUCCESS
+  // callback the new entity may take a moment to appear. This means the webhook
+  // is OPTIONAL for the sandbox flow — polling the API is enough.
+  for (let i = 0; i < 20; i++) {
+    if (entityByCustomer.has(key)) return entityByCustomer.get(key);
+    const e = await fromApi();
+    if (e) return e;
+    await sleep(750);
+  }
+  throw new Error("No entity found for this customer yet — the bank consent may not have completed.");
 }
 
 // List the entity's accounts, then enrich each with its balance.

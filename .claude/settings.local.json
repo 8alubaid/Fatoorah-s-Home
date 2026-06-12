@@ -8,7 +8,10 @@
       "mcp__Claude_Preview__preview_start",
       "PowerShell($rv = \\(Get-Content node_modules/react/package.json | ConvertFrom-Json\\).version; \"react is $rv\"; npm install \\(\"react-dom@\" + $rv\\) --save-exact --silent 2>&1 | Select-Object -Last 3; \"react-dom now \" + \\(Get-Content node_modules/react-dom/package.json | ConvertFrom-Json\\).version)",
       "WebFetch(domain:docs.leantech.me)",
-      "WebSearch"
+      "WebSearch",
+      "PowerShell(npx expo install --fix 2>&1 | Select-Object -Last 25; \"---DONE exit=$LASTEXITCODE---\")",
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ]
   }
 }
