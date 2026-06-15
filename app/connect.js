@@ -46,10 +46,10 @@ export default function Connect() {
         // KSA v2 uses connect() with app_token = Application Id (per dashboard).
         leanRef.current.connect({
           app_token: leanSession.appToken,
+          access_token: leanSession.customerToken, // customer-scoped token (its aud is the LinkSDK)
           customer_id: leanSession.customerId,
           permissions: ["identity", "accounts", "balance", "transactions"],
-          sandbox: LEAN_ENV === "sandbox",
-          account_type: "personal",
+          account_type: "PERSONAL", // RN SDK expects the uppercase enum (PERSONAL | BUSINESS)
           fail_redirect_url: "https://docs.leantech.me/v2.0-KSA/page/failed-connection",
           success_redirect_url: "https://docs.leantech.me/v2.0-KSA/page/successful-connection",
         });
@@ -67,7 +67,13 @@ export default function Connect() {
     if (!p) return;
     if (resp?.status === "SUCCESS") p.resolve(resp);
     else if (resp?.status === "CANCELLED") p.reject(new Error("You cancelled the bank connection."));
-    else p.reject(new Error(resp?.message || "Bank connection failed."));
+    else {
+      const detail =
+        resp?.message ||
+        [resp?.status, resp?.secondary_status, resp?.last_api_response].filter(Boolean).join(" · ") ||
+        "Bank connection failed.";
+      p.reject(new Error(detail));
+    }
   };
 
   const startConnect = async () => {
@@ -200,9 +206,9 @@ export default function Connect() {
         <LeanLink
           ref={leanRef}
           appToken={leanSession.appToken}
-          version="@latest"
           country="sa"
           sandbox={LEAN_ENV === "sandbox"}
+          showLogs
           callback={onLeanCallback}
         />
       ) : null}

@@ -252,11 +252,14 @@ app.post("/api/lean/customer-token", async (req, res) => {
   if (!ensureConfigured(res)) return;
   try {
     const oauth = (await getAppToken("api")).access_token;
+    // Unique app_user_id per connection so Lean never returns
+    // CUSTOMER_ALREADY_EXISTS. (Production: store a stable id per real user.)
+    const appUserId = req.body.appUserId || `fatoorah-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     // Create the customer object: POST /customers/v1 with the API token.
     const r = await fetch(`${API_BASE}/customers/v1`, {
       method: "POST",
       headers: { Authorization: `Bearer ${oauth}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ app_user_id: req.body.appUserId || "fatoorah-user-1" }),
+      body: JSON.stringify({ app_user_id: appUserId }),
     });
     const customer = await r.json();
     const customerId = customer.customer_id || customer.id;
