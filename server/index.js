@@ -76,41 +76,47 @@ function categorize(description = "") {
   return "Other";
 }
 
+// Lean Data API v2 transaction shape:
+//   { transaction_id, transaction_information, credit_debit_indicator,
+//     amount: { currency, amount }, booking_date_time, value_date_time }
 function normalizeTransaction(t, accountId) {
-  // TODO: CONFIRM field names against your Lean Data API response.
-  const amount = Math.abs(Number(t.amount ?? t.value ?? 0));
-  const date = (t.timestamp || t.bookingDateTime || t.date || "").slice(0, 10);
-  const merchant = t.merchant?.name || t.description || t.narrative || "Transaction";
+  const info = t.transaction_information || t.description || "Transaction";
+  const amount = Math.abs(Number(t.amount?.amount ?? t.amount ?? 0));
+  const date = String(t.booking_date_time || t.value_date_time || "").slice(0, 10);
   return {
-    id: String(t.id || t.transactionId || `${accountId}-${date}-${amount}`),
-    merchant,
-    category: categorize(merchant + " " + (t.description || "")),
+    id: String(t.transaction_id || t.id || `${accountId}-${date}-${amount}`),
+    merchant: info.length > 42 ? info.slice(0, 42).trim() + "…" : info,
+    category: categorize(info),
     amount,
     date,
-    note: t.description || "",
+    note: info,
     accountId,
   };
 }
 
+// Lean Data API v2 account shape: { account_id, description, nickname,
+//   account_sub_type, currency, account: [{ scheme_name:'IBAN', identification }] }
 function normalizeAccount(a) {
-  // TODO: CONFIRM field names against your Lean Data API response.
+  const accs = a.account || [];
+  const iban = accs.find((x) => x.scheme_name === "IBAN");
+  const ident = iban?.identification || accs[0]?.identification || "";
   return {
     id: String(a.account_id || a.id),
-    bankId: a.bank_identifier || "snb",
-    bankName: a.bank_name || "Saudi National Bank",
-    name: a.name || a.nickname || a.type || "Account",
-    mask: a.account_number ? "••••" + String(a.account_number).slice(-4) : "••••",
-    type: a.type || "Current",
+    bankId: "snb",
+    bankName: "SNB · Sandbox",
+    name: a.description || a.nickname || a.account_sub_type || "Account",
+    mask: ident ? "••••" + String(ident).slice(-4) : "••••",
+    type: a.account_sub_type || a.account_type || "Current",
     currency: a.currency || "SAR",
-    balance: Number(a.balance ?? a.current_balance ?? 0),
+    balance: 0, // filled from the balances endpoint
   };
 }
 
-// KSA Data API v2 authenticates with the Application Id in the "lean-app-token"
-// header (confirmed from the dashboard quickstart) — NOT an OAuth Bearer token.
-// entity_id is passed as a query param, not a header.
-function dataHeaders() {
-  return { "lean-app-token": LEAN_APP_ID, "Content-Type": "application/json" };
+// Data API v2 auth = the OAuth app access token as a Bearer token (confirmed
+// empirically; the dashboard's lean-app-token header returns 401). entity_id is
+// always a query param.
+function dataHeaders(oauth) {
+  return { Authorization: `Bearer ${oauth}`, "Content-Type": "application/json" };
 }
 
 // Resolve a customer's entity_id. Order: webhook cache → customer API →
@@ -153,25 +159,26 @@ async function resolveEntity(oauth, customerId) {
 // Balances/transactions are per-account in v2:
 //   GET /data/v2/accounts/{account_id}/balances
 //   GET /data/v2/accounts/{account_id}/transactions
-async function fetchAccounts(entityId) {
-  // GET /data/v2/accounts?entity_id=<id>  (confirmed from the dashboard).
-  const r = await fetch(`${API_BASE}/data/v2/accounts?entity_id=${encodeURIComponent(entityId)}`, {
-    headers: dataHeaders(),
-  });
+async function fetchAccounts(oauth, entityId) {
+  const eq = `entity_id=${encodeURIComponent(entityId)}`;
+  const r = await fetch(`${API_BASE}/data/v2/accounts?${eq}`, { headers: dataHeaders(oauth) });
   if (!r.ok) throw new Error(`Lean accounts failed (${r.status}): ${await r.text()}`);
   const data = await r.json();
-  const raw = data.accounts || data.payload?.accounts || data.data || [];
+  const raw = data.data?.accounts || data.accounts || [];
 
   const accounts = [];
   for (const a of raw) {
     const acct = normalizeAccount(a);
     try {
-      const b = await fetch(`${API_BASE}/data/v2/accounts/${acct.id}/balances`, {
-        headers: dataHeaders(),
+      // Per-account balance also needs ?entity_id=.
+      const b = await fetch(`${API_BASE}/data/v2/accounts/${acct.id}/balances?${eq}`, {
+        headers: dataHeaders(oauth),
       });
       const bd = await b.json();
-      const bal = bd.balance ?? bd.balances?.[0]?.amount ?? bd.payload?.balance;
-      if (bal != null) acct.balance = Number(bal);
+      const balances = bd.data?.balances || bd.balances || [];
+      const pick = balances.find((x) => x.type === "CLOSING_AVAILABLE") || balances[0];
+      const amt = pick?.amount?.amount;
+      if (amt != null) acct.balance = Number(amt);
     } catch {
       /* balance is best-effort */
     }
@@ -280,7 +287,7 @@ app.post("/api/lean/accounts", async (req, res) => {
     const { customerId, entityId: provided } = req.body;
     const oauth = (await getAppToken("api")).access_token;
     const entityId = provided || (await resolveEntity(oauth, customerId));
-    const accounts = await fetchAccounts(entityId);
+    const accounts = await fetchAccounts(oauth, entityId);
     res.json({ accounts, entityId });
   } catch (e) {
     res.status(502).json({ error: e.message });
@@ -294,17 +301,20 @@ app.post("/api/lean/transactions", async (req, res) => {
     const { customerId, entityId: provided } = req.body;
     const oauth = (await getAppToken("api")).access_token;
     const entityId = provided || (await resolveEntity(oauth, customerId));
-    const accounts = await fetchAccounts(entityId);
+    const accounts = await fetchAccounts(oauth, entityId);
+    const eq = `entity_id=${encodeURIComponent(entityId)}`;
 
     let transactions = [];
     for (const a of accounts) {
-      const r = await fetch(`${API_BASE}/data/v2/accounts/${a.id}/transactions`, {
-        headers: dataHeaders(),
+      const r = await fetch(`${API_BASE}/data/v2/accounts/${a.id}/transactions?${eq}`, {
+        headers: dataHeaders(oauth),
       });
       if (!r.ok) continue;
       const data = await r.json();
-      const raw = data.transactions || data.payload?.transactions || data.data || [];
-      transactions = transactions.concat(raw.map((t) => normalizeTransaction(t, a.id)));
+      const raw = data.data?.transactions || data.transactions || [];
+      // Spending app → keep money-out (DEBIT) transactions.
+      const debits = raw.filter((t) => t.credit_debit_indicator === "DEBIT");
+      transactions = transactions.concat(debits.map((t) => normalizeTransaction(t, a.id)));
     }
     res.json({ transactions });
   } catch (e) {

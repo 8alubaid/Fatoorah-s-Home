@@ -11,6 +11,7 @@ import {
   totalForWeek,
   categoryTotals,
   recentTransactions,
+  latestTxDate,
 } from "../../src/data";
 import { money, shortDate, monthLabel, TODAY } from "../../src/utils";
 import { useBank } from "../../src/bank/BankContext";
@@ -37,14 +38,16 @@ export default function Dashboard() {
     );
   }
 
-  const month = totalForMonth(transactions, TODAY);
-  const week = totalForWeek(transactions, TODAY);
-  const cats = categoryTotals(transactions, TODAY);
+  // Anchor monthly views to the latest transaction (sandbox data can be historical).
+  const ref = latestTxDate(transactions) || TODAY;
+  const month = totalForMonth(transactions, ref);
+  const week = totalForWeek(transactions, ref);
+  const cats = categoryTotals(transactions, ref);
   const recent = recentTransactions(transactions, 4);
   const topThree = cats.slice(0, 3);
 
   const summary =
-    `You've spent ${money(month)} so far this ${monthLabel(TODAY).split(" ")[0]}. ` +
+    `You've spent ${money(month)} in ${monthLabel(ref)}. ` +
     (cats[0]
       ? `${cats[0].category} is your biggest category at ${money(cats[0].amount)}. `
       : "") +
@@ -55,7 +58,7 @@ export default function Dashboard() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Fatoorah" subtitle={`Hello 👋 · ${monthLabel(TODAY)}`} />
+        <ScreenHeader title="Fatoorah" subtitle={`Hello 👋 · ${monthLabel(ref)}`} />
 
         {/* Hero: month + week totals */}
         <Card style={styles.hero}>

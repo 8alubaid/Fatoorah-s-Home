@@ -83,3 +83,8 @@ export const dailyTotals = (txns, ref) => {
     });
   return map;
 };
+
+// The most recent transaction's date — used as the dashboard/insights "anchor"
+// so real (often historical sandbox) data still populates the monthly views.
+export const latestTxDate = (txns) =>
+  txns.length ? txns.map((t) => parseDate(t.date)).reduce((a, b) => (a > b ? a : b)) : null;

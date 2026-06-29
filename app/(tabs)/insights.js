@@ -6,11 +6,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { spacing, radius, categoryColor, categoryEmoji } from "../../src/theme";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
 import { Card, ScreenHeader, SectionTitle, EmptyState } from "../../src/components/ui";
-import { categoryTotals, totalForMonth, dailyTotals } from "../../src/data";
+import { categoryTotals, totalForMonth, dailyTotals, latestTxDate } from "../../src/data";
 import { money, monthLabel, TODAY } from "../../src/utils";
 import { useBank } from "../../src/bank/BankContext";
-
-const lastMonthRef = new Date(TODAY.getFullYear(), TODAY.getMonth() - 1, 1);
 
 // Weekly buckets (W1..W5) from this month's daily totals — keeps bars readable.
 function weeklyBuckets(daily) {
@@ -42,10 +40,13 @@ export default function Insights() {
     );
   }
 
-  const cats = categoryTotals(transactions, TODAY);
-  const month = totalForMonth(transactions, TODAY);
+  // Anchor to the latest transaction month (sandbox data can be historical).
+  const ref = latestTxDate(transactions) || TODAY;
+  const lastMonthRef = new Date(ref.getFullYear(), ref.getMonth() - 1, 1);
+  const cats = categoryTotals(transactions, ref);
+  const month = totalForMonth(transactions, ref);
   const lastMonth = totalForMonth(transactions, lastMonthRef);
-  const daily = dailyTotals(transactions, TODAY);
+  const daily = dailyTotals(transactions, ref);
   const weeks = weeklyBuckets(daily);
   const maxWeek = Math.max(...weeks, 1);
   const catMax = cats.length ? cats[0].amount : 1;
@@ -57,7 +58,7 @@ export default function Insights() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Insights 📊" subtitle={monthLabel(TODAY)} />
+        <ScreenHeader title="Insights 📊" subtitle={monthLabel(ref)} />
 
         {/* Trend vs last month */}
         <Card style={styles.trendCard}>
