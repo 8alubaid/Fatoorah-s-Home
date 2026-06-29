@@ -17,18 +17,48 @@
 import { LEAN_BACKEND_URL, LEAN_ENV } from "./config";
 import { SAUDI_BANKS } from "./snbMockData";
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Free-tier cloud hosts (e.g. Render) sleep after inactivity and can take
+// ~30-50s to cold-start — longer than one request's timeout. Poll /health with
+// short, abortable requests until it responds, so the real calls hit a warm
+// server instead of failing on the very first tap.
+async function wakeUp(onProgress) {
+  for (let i = 0; i < 20; i++) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    try {
+      const r = await fetch(`${LEAN_BACKEND_URL}/health`, { signal: ctrl.signal });
+      if (r.ok) return true;
+    } catch {
+      /* not up yet */
+    } finally {
+      clearTimeout(timer);
+    }
+    if (i === 0) onProgress?.("Waking up the server…");
+    await sleep(2500);
+  }
+  return false;
+}
+
 async function api(path, body) {
   let res;
-  try {
-    res = await fetch(`${LEAN_BACKEND_URL}${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ env: LEAN_ENV, ...(body || {}) }),
-    });
-  } catch (e) {
-    throw new Error(
-      `Can't reach the Lean backend at ${LEAN_BACKEND_URL}. Start /server and set LEAN_BACKEND_URL in src/bank/config.js (use your PC's LAN IP on a phone).`
-    );
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      res = await fetch(`${LEAN_BACKEND_URL}${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ env: LEAN_ENV, ...(body || {}) }),
+      });
+      break;
+    } catch (e) {
+      if (attempt === 2) {
+        throw new Error(
+          `Couldn't reach the backend at ${LEAN_BACKEND_URL}. It may still be waking up — tap Try again in a few seconds.`
+        );
+      }
+      await sleep(2500); // transient/cold-start — retry
+    }
   }
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -63,6 +93,9 @@ export const leanProvider = {
           "lean-react-native + react-native-webview are included. See server/README.md."
       );
     }
+
+    onProgress?.("Connecting…");
+    await wakeUp(onProgress); // spin up the cloud backend if it's asleep
 
     onProgress?.("Creating secure session…");
     const { customerId, customerToken, appToken } = await api("/api/lean/customer-token", { bankId });

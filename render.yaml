@@ -13,6 +13,12 @@ services:
     startCommand: npm start
     healthCheckPath: /health
     autoDeploy: true
+    # Only redeploy when the backend (or this blueprint) changes — app-side
+    # pushes shouldn't restart the server.
+    buildFilters:
+      paths:
+        - server/**
+        - render.yaml
     envVars:
       - key: LEAN_ENV
         value: sandbox
