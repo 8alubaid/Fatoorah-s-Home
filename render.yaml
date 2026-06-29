@@ -1,0 +1,22 @@
+# Render Blueprint — deploys the Fatoorah backend (the /server folder).
+# In Render: New + → Blueprint → pick this repo. Render reads this file and
+# creates the service. You'll be prompted to paste LEAN_APP_ID and
+# LEAN_CLIENT_SECRET (kept as secrets — never committed).
+services:
+  - type: web
+    name: fatoorah-server
+    runtime: node
+    rootDir: server
+    plan: free
+    branch: master
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: LEAN_ENV
+        value: sandbox
+      - key: LEAN_APP_ID
+        sync: false # set in the Render dashboard
+      - key: LEAN_CLIENT_SECRET
+        sync: false # set in the Render dashboard
