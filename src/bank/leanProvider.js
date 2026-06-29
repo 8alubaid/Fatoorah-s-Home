@@ -108,11 +108,23 @@ export const leanProvider = {
     const entityId = link?.entity_id || link?.entity?.id || link?.payload?.entity_id || undefined;
 
     onProgress?.("Fetching your accounts…");
-    const { accounts } = await api("/api/lean/accounts", { customerId, entityId });
+    const accRes = await api("/api/lean/accounts", { customerId, entityId });
+    const resolvedEntityId = accRes.entityId || entityId;
 
     onProgress?.("Importing transactions…");
-    const { transactions } = await api("/api/lean/transactions", { customerId, entityId });
+    const { transactions } = await api("/api/lean/transactions", { customerId, entityId: resolvedEntityId });
 
-    return { accounts, transactions };
+    // Return the ids so the app can persist them and re-fetch later.
+    return { accounts: accRes.accounts, transactions, customerId, entityId: resolvedEntityId };
+  },
+
+  // Re-fetch with stored ids (restore-on-launch / re-sync) — no LinkSDK consent.
+  async fetchData({ customerId, entityId, onProgress } = {}) {
+    onProgress?.("Syncing…");
+    await wakeUp(onProgress);
+    const accRes = await api("/api/lean/accounts", { customerId, entityId });
+    const eid = accRes.entityId || entityId;
+    const { transactions } = await api("/api/lean/transactions", { customerId, entityId: eid });
+    return { accounts: accRes.accounts, transactions, customerId, entityId: eid };
   },
 };

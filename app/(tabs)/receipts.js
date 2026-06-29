@@ -5,7 +5,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { spacing, radius, categoryColor, categoryEmoji } from "../../src/theme";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
-import { ScreenHeader, Chip, Avatar, EmptyState } from "../../src/components/ui";
+import { ScreenHeader, Chip, Avatar, EmptyState, ScreenLoading } from "../../src/components/ui";
 import { sortedTransactions, allCategories, parseDate } from "../../src/data";
 import { money, shortDate, TODAY } from "../../src/utils";
 import { useBank } from "../../src/bank/BankContext";
@@ -19,7 +19,7 @@ const DATE_FILTERS = [
 export default function Receipts() {
   const { colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
-  const { connected, transactions } = useBank();
+  const { connected, transactions, restoring } = useBank();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [dateFilter, setDateFilter] = useState("all");
@@ -42,6 +42,15 @@ export default function Receipts() {
   }, [transactions, query, category, dateFilter]);
 
   const total = filtered.reduce((s, r) => s + r.amount, 0);
+
+  if (restoring) {
+    return (
+      <SafeAreaView style={styles.safe} edges={["top"]}>
+        <ScreenHeader title="Receipts 🧾" />
+        <ScreenLoading label="Loading your receipts…" />
+      </SafeAreaView>
+    );
+  }
 
   if (!connected) {
     return (

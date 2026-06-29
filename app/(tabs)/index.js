@@ -1,11 +1,11 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { spacing, radius, categoryColor, categoryEmoji } from "../../src/theme";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
-import { Card, ScreenHeader, SectionTitle, ProgressBar, Avatar, EmptyState } from "../../src/components/ui";
+import { Card, ScreenHeader, SectionTitle, ProgressBar, Avatar, EmptyState, ScreenLoading } from "../../src/components/ui";
 import {
   totalForMonth,
   totalForWeek,
@@ -13,7 +13,7 @@ import {
   recentTransactions,
   latestTxDate,
 } from "../../src/data";
-import { money, shortDate, monthLabel, TODAY } from "../../src/utils";
+import { money, shortDate, monthLabel, timeAgo, TODAY } from "../../src/utils";
 import { useBank } from "../../src/bank/BankContext";
 
 const MONTHLY_BUDGET = 4000;
@@ -21,7 +21,16 @@ const MONTHLY_BUDGET = 4000;
 export default function Dashboard() {
   const { colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
-  const { connected, transactions, accounts, disconnect } = useBank();
+  const { connected, transactions, accounts, disconnect, restoring, refreshing, lastSynced, refresh } = useBank();
+
+  if (restoring) {
+    return (
+      <SafeAreaView style={styles.safe} edges={["top"]}>
+        <ScreenHeader title="Fatoorah" subtitle="Restoring your connection…" />
+        <ScreenLoading label="Loading your accounts…" />
+      </SafeAreaView>
+    );
+  }
 
   if (!connected) {
     return (
@@ -78,7 +87,9 @@ export default function Dashboard() {
         </Card>
 
         {/* Linked accounts */}
-        <SectionTitle right="Manage">Linked accounts</SectionTitle>
+        <SectionTitle right={lastSynced ? `Synced ${timeAgo(lastSynced)}` : undefined}>
+          Linked accounts
+        </SectionTitle>
         <Card style={{ paddingVertical: spacing.xs }}>
           {accounts.map((a, i) => (
             <View key={a.id} style={[styles.acctRow, i < accounts.length - 1 && styles.divider]}>
@@ -92,10 +103,23 @@ export default function Dashboard() {
               </Text>
             </View>
           ))}
-          <Pressable onPress={disconnect} style={styles.disconnect}>
-            <Ionicons name="unlink" size={16} color={colors.danger} />
-            <Text style={styles.disconnectText}>Disconnect</Text>
-          </Pressable>
+          <View style={styles.acctActions}>
+            <Pressable onPress={refresh} disabled={refreshing} style={styles.acctAction}>
+              {refreshing ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <Ionicons name="refresh" size={16} color={colors.primary} />
+              )}
+              <Text style={[styles.acctActionText, { color: colors.primary }]}>
+                {refreshing ? "Syncing…" : "Re-sync"}
+              </Text>
+            </Pressable>
+            <View style={styles.acctActionDivider} />
+            <Pressable onPress={disconnect} style={styles.acctAction}>
+              <Ionicons name="unlink" size={16} color={colors.danger} />
+              <Text style={[styles.acctActionText, { color: colors.danger }]}>Disconnect</Text>
+            </Pressable>
+          </View>
         </Card>
 
         {/* AI summary */}
@@ -169,8 +193,16 @@ const makeStyles = (colors) =>
     acctSub: { color: colors.textFaint, fontSize: 12, marginTop: 2 },
     acctBalance: { color: colors.text, fontSize: 15, fontWeight: "700" },
     divider: { borderBottomWidth: 1, borderBottomColor: colors.border },
-    disconnect: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: spacing.md },
-    disconnectText: { color: colors.danger, fontSize: 13, fontWeight: "600", marginLeft: 6 },
+    acctActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      marginTop: spacing.xs,
+    },
+    acctAction: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: spacing.md },
+    acctActionText: { fontSize: 13, fontWeight: "600", marginLeft: 6 },
+    acctActionDivider: { width: 1, height: 20, backgroundColor: colors.border },
     aiCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary + "55" },
     aiText: { color: colors.text, fontSize: 15, lineHeight: 22 },
     budgetRow: { flexDirection: "row", alignItems: "flex-end", marginBottom: spacing.md },

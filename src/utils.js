@@ -17,6 +17,18 @@ export const shortDate = (iso) => {
 
 export const monthLabel = (ref) => `${MONTHS_LONG[ref.getMonth()]} ${ref.getFullYear()}`;
 
+// "just now", "2m ago", "1h ago", "3d ago" — for the last-synced label.
+export const timeAgo = (ts) => {
+  if (!ts) return "";
+  const s = Math.max(0, Math.round((Date.now() - ts) / 1000));
+  if (s < 45) return "just now";
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.round(h / 24)}d ago`;
+};
+
 // "in 5 days", "tomorrow", "today", "3 days ago" — relative to TODAY.
 export const relativeDays = (iso) => {
   const d = parseDate(iso);

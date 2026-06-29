@@ -5,7 +5,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { spacing, radius, categoryColor, categoryEmoji } from "../../src/theme";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
-import { Card, ScreenHeader, SectionTitle, EmptyState } from "../../src/components/ui";
+import { Card, ScreenHeader, SectionTitle, EmptyState, ScreenLoading } from "../../src/components/ui";
 import { categoryTotals, totalForMonth, dailyTotals, latestTxDate } from "../../src/data";
 import { money, monthLabel, TODAY } from "../../src/utils";
 import { useBank } from "../../src/bank/BankContext";
@@ -23,7 +23,16 @@ function weeklyBuckets(daily) {
 export default function Insights() {
   const { colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
-  const { connected, transactions } = useBank();
+  const { connected, transactions, restoring } = useBank();
+
+  if (restoring) {
+    return (
+      <SafeAreaView style={styles.safe} edges={["top"]}>
+        <ScreenHeader title="Insights 📊" />
+        <ScreenLoading label="Loading your insights…" />
+      </SafeAreaView>
+    );
+  }
 
   if (!connected) {
     return (

@@ -1,8 +1,19 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { radius, spacing } from "../theme";
 import { useTheme, useThemedStyles } from "../ThemeContext";
+
+export function ScreenLoading({ label }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
+  return (
+    <View style={styles.loading}>
+      <ActivityIndicator size="large" color={colors.primary} />
+      {label ? <Text style={styles.loadingLabel}>{label}</Text> : null}
+    </View>
+  );
+}
 
 export function Card({ children, style }) {
   const styles = useThemedStyles(makeStyles);
@@ -189,4 +200,6 @@ const makeStyles = (colors) =>
     emptyEmoji: { fontSize: 48, marginBottom: spacing.md },
     emptyTitle: { color: colors.text, fontSize: 20, fontWeight: "800", textAlign: "center" },
     emptyMessage: { color: colors.textMuted, fontSize: 14, textAlign: "center", marginTop: spacing.sm, lineHeight: 20 },
+    loading: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl },
+    loadingLabel: { color: colors.textMuted, fontSize: 14, marginTop: spacing.md },
   });

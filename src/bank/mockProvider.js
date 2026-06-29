@@ -26,6 +26,12 @@ export const mockProvider = {
     await wait(800);
 
     // The mock only knows SNB; a real provider would return data for `bankId`.
-    return { accounts: SNB_ACCOUNTS, transactions: SNB_TRANSACTIONS };
+    return { accounts: SNB_ACCOUNTS, transactions: SNB_TRANSACTIONS, customerId: "mock-customer", entityId: "mock-entity" };
+  },
+
+  // Re-fetch using stored ids (restore-on-launch / re-sync). No consent needed.
+  async fetchData() {
+    await wait(400);
+    return { accounts: SNB_ACCOUNTS, transactions: SNB_TRANSACTIONS, customerId: "mock-customer", entityId: "mock-entity" };
   },
 };
