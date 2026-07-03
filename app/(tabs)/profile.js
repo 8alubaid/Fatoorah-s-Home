@@ -12,7 +12,7 @@ export default function Profile() {
   const { colors, isDark, toggle } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { user, signOut } = useAuth();
-  const { connected, accounts, disconnect } = useBank();
+  const { connected, accounts } = useBank();
   const [busy, setBusy] = useState(false);
 
   const email = user?.email || "—";
@@ -25,10 +25,9 @@ export default function Profile() {
     if (busy) return;
     setBusy(true);
     try {
-      // Clear the bank connection on this device so accounts don't leak between
-      // logins (until the connection is stored per-user server-side).
-      await disconnect();
-      await signOut(); // the route gate then redirects to /auth
+      // Just sign out — the bank connection stays saved server-side and restores
+      // on next login. BankContext clears local state when the session ends.
+      await signOut();
     } finally {
       setBusy(false);
     }

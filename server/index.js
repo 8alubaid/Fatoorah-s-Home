@@ -9,6 +9,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { createClient } from "@supabase/supabase-js";
 
 dotenv.config();
 
@@ -16,8 +17,17 @@ const {
   LEAN_ENV = "sandbox",
   LEAN_APP_ID,
   LEAN_CLIENT_SECRET,
+  SUPABASE_URL,
+  SUPABASE_SERVICE_ROLE_KEY,
   PORT = 4000,
 } = process.env;
+
+// Supabase admin client (service role) — verifies user JWTs and stores each
+// user's bank connection. Present only when the SUPABASE_* env vars are set.
+const supabase =
+  SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
+    ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
+    : null;
 
 // Saudi (KSA) endpoints — note the ".sa." segment (confirmed from the dashboard).
 const AUTH_BASE =
@@ -44,6 +54,41 @@ function ensureConfigured(res) {
     return false;
   }
   return true;
+}
+
+// Verify the caller's Supabase JWT (Authorization: Bearer <token>) and return
+// the user, or write a 401/501 and return null.
+async function requireUser(req, res) {
+  if (!supabase) {
+    res.status(501).json({ error: "Auth not configured — set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY on the backend." });
+    return null;
+  }
+  const header = req.headers.authorization || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+  if (!token) {
+    res.status(401).json({ error: "Not signed in." });
+    return null;
+  }
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data?.user) {
+    res.status(401).json({ error: "Session expired — sign in again." });
+    return null;
+  }
+  return data.user;
+}
+
+// Per-user bank connection row (bank_connections table).
+async function getConnection(userId) {
+  const { data } = await supabase.from("bank_connections").select("*").eq("user_id", userId).maybeSingle();
+  return data || null;
+}
+async function saveConnection(userId, fields) {
+  await supabase
+    .from("bank_connections")
+    .upsert({ user_id: userId, ...fields, updated_at: new Date().toISOString() });
+}
+async function deleteConnection(userId) {
+  await supabase.from("bank_connections").delete().eq("user_id", userId);
 }
 
 // OAuth 2.0 client_credentials → short-lived JWT (~1h). Confirmed from docs.
@@ -254,53 +299,75 @@ app.get("/api/lean/debug/entities", async (req, res) => {
   }
 });
 
-// 1) Create/lookup a customer and return a customer-scoped token for the LinkSDK.
+// 1) Create (or reuse) the signed-in user's Lean customer; return a SDK token.
 app.post("/api/lean/customer-token", async (req, res) => {
   if (!ensureConfigured(res)) return;
+  const user = await requireUser(req, res);
+  if (!user) return;
   try {
     const oauth = (await getAppToken("api")).access_token;
-    // Unique app_user_id per connection so Lean never returns
-    // CUSTOMER_ALREADY_EXISTS. (Production: store a stable id per real user.)
-    const appUserId = req.body.appUserId || `fatoorah-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    // Create the customer object: POST /customers/v1 with the API token.
-    const r = await fetch(`${API_BASE}/customers/v1`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${oauth}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ app_user_id: appUserId }),
-    });
-    const customer = await r.json();
-    const customerId = customer.customer_id || customer.id;
-    if (!customerId) throw new Error(`No customer_id returned: ${JSON.stringify(customer)}`);
+    const conn = await getConnection(user.id);
+    let customerId = conn?.lean_customer_id;
+
+    if (!customerId) {
+      // Create a fresh Lean customer for this user (unique app_user_id).
+      const appUserId = `fatoorah-${user.id}-${Date.now()}`;
+      const r = await fetch(`${API_BASE}/customers/v1`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${oauth}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ app_user_id: appUserId }),
+      });
+      const customer = await r.json();
+      customerId = customer.customer_id || customer.id;
+      if (!customerId) throw new Error(`No customer_id returned: ${JSON.stringify(customer)}`);
+      await saveConnection(user.id, { lean_customer_id: customerId, lean_entity_id: null, bank_name: req.body.bankId || null });
+    }
+
     const customerToken = (await getAppToken(`customer.${customerId}`)).access_token;
-    // The LinkSDK's app_token is the Application Id (a public identifier),
-    // confirmed from the KSA quickstart — NOT an OAuth token.
     res.json({ customerId, customerToken, appToken: LEAN_APP_ID });
   } catch (e) {
     res.status(502).json({ error: e.message });
   }
 });
 
-// 2) After LinkSDK consent, fetch the connected accounts (+ balances).
+// 2) The signed-in user's accounts (+ balances) — looks up their customer/entity.
 app.post("/api/lean/accounts", async (req, res) => {
   if (!ensureConfigured(res)) return;
+  const user = await requireUser(req, res);
+  if (!user) return;
   try {
-    const { customerId, entityId: provided } = req.body;
+    const conn = await getConnection(user.id);
+    if (!conn?.lean_customer_id) return res.json({ accounts: [], connected: false });
+
     const oauth = (await getAppToken("api")).access_token;
-    const entityId = provided || (await resolveEntity(oauth, customerId));
+    let entityId = conn.lean_entity_id;
+    if (!entityId) {
+      try {
+        entityId = await resolveEntity(oauth, conn.lean_customer_id);
+      } catch {
+        return res.json({ accounts: [], connected: false }); // consent not completed yet
+      }
+      await saveConnection(user.id, { lean_customer_id: conn.lean_customer_id, lean_entity_id: entityId, bank_name: conn.bank_name });
+    }
+
     const accounts = await fetchAccounts(oauth, entityId);
-    res.json({ accounts, entityId });
+    res.json({ accounts, entityId, connected: true });
   } catch (e) {
     res.status(502).json({ error: e.message });
   }
 });
 
-// 3) Fetch transactions per account for the connected entity (v2 is per-account).
+// 3) The signed-in user's transactions (per account).
 app.post("/api/lean/transactions", async (req, res) => {
   if (!ensureConfigured(res)) return;
+  const user = await requireUser(req, res);
+  if (!user) return;
   try {
-    const { customerId, entityId: provided } = req.body;
+    const conn = await getConnection(user.id);
+    if (!conn?.lean_customer_id || !conn?.lean_entity_id) return res.json({ transactions: [] });
+
     const oauth = (await getAppToken("api")).access_token;
-    const entityId = provided || (await resolveEntity(oauth, customerId));
+    const entityId = conn.lean_entity_id;
     const accounts = await fetchAccounts(oauth, entityId);
     const eq = `entity_id=${encodeURIComponent(entityId)}`;
 
@@ -317,6 +384,18 @@ app.post("/api/lean/transactions", async (req, res) => {
       transactions = transactions.concat(debits.map((t) => normalizeTransaction(t, a.id)));
     }
     res.json({ transactions });
+  } catch (e) {
+    res.status(502).json({ error: e.message });
+  }
+});
+
+// 4) Disconnect — forget the signed-in user's bank connection.
+app.post("/api/lean/disconnect", async (req, res) => {
+  const user = await requireUser(req, res);
+  if (!user) return;
+  try {
+    await deleteConnection(user.id);
+    res.json({ ok: true });
   } catch (e) {
     res.status(502).json({ error: e.message });
   }

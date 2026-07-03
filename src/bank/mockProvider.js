@@ -26,12 +26,14 @@ export const mockProvider = {
     await wait(800);
 
     // The mock only knows SNB; a real provider would return data for `bankId`.
-    return { accounts: SNB_ACCOUNTS, transactions: SNB_TRANSACTIONS, customerId: "mock-customer", entityId: "mock-entity" };
+    return { accounts: SNB_ACCOUNTS, transactions: SNB_TRANSACTIONS };
   },
 
-  // Re-fetch using stored ids (restore-on-launch / re-sync). No consent needed.
+  // Mock has no server-side store, so it starts "not connected" each launch.
   async fetchData() {
-    await wait(400);
-    return { accounts: SNB_ACCOUNTS, transactions: SNB_TRANSACTIONS, customerId: "mock-customer", entityId: "mock-entity" };
+    await wait(300);
+    return { accounts: [], transactions: [] };
   },
+
+  async disconnect() {},
 };

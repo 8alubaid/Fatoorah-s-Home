@@ -1,59 +1,62 @@
 // App-wide bank connection state. Every screen reads transactions/accounts from
-// here, so the data source (mock or Lean) is invisible to the UI. The connection
-// (customerId + entityId) is persisted in secure storage and re-fetched on
-// launch, so the user doesn't re-link every time they open the app.
-import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
+// here. The connection now lives SERVER-SIDE, tied to the signed-in user (the
+// backend looks it up from the auth token), so it follows the account across
+// devices and never leaks between users.
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { bankProvider } from "./index";
-import { loadConnection, saveConnection, clearConnection } from "./storage";
+import { useAuth } from "../auth/AuthContext";
 
 const BankCtx = createContext(null);
 
 export function BankProvider({ children }) {
+  const { session } = useAuth();
   const [accounts, setAccounts] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [status, setStatus] = useState("idle"); // idle | connecting | connected | error
-  const [restoring, setRestoring] = useState(true); // restoring a saved connection on launch
+  const [restoring, setRestoring] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastSynced, setLastSynced] = useState(null);
-  const conn = useRef(null); // { customerId, entityId }
 
-  const apply = useCallback(async (r) => {
-    setAccounts(r.accounts || []);
+  const apply = useCallback((r) => {
+    const accts = r.accounts || [];
+    setAccounts(accts);
     setTransactions(r.transactions || []);
-    conn.current = { customerId: r.customerId, entityId: r.entityId };
-    await saveConnection(conn.current);
     setLastSynced(Date.now());
-    setStatus("connected");
+    setStatus(accts.length ? "connected" : "idle");
   }, []);
 
-  // Restore a saved connection on launch and re-fetch its data.
+  // Load the signed-in user's connection on login; clear everything on logout.
   useEffect(() => {
     let cancelled = false;
+    if (!session) {
+      setAccounts([]);
+      setTransactions([]);
+      setLastSynced(null);
+      setStatus("idle");
+      setRestoring(false);
+      return;
+    }
     (async () => {
-      const saved = await loadConnection();
-      if (saved?.customerId) {
-        conn.current = saved;
-        setStatus("connecting");
-        try {
-          const r = await bankProvider.fetchData(saved);
-          if (!cancelled) await apply(r);
-        } catch {
-          if (!cancelled) setStatus("error"); // keep conn so the user can retry
-        }
+      setRestoring(true);
+      try {
+        const r = await bankProvider.fetchData();
+        if (!cancelled) apply(r);
+      } catch {
+        if (!cancelled) setStatus("idle");
       }
       if (!cancelled) setRestoring(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [apply]);
+  }, [session, apply]);
 
   const connect = useCallback(
     async ({ bankId, onProgress, openLinkSDK } = {}) => {
       setStatus("connecting");
       try {
         const result = await bankProvider.connect({ bankId, onProgress, openLinkSDK });
-        await apply(result);
+        apply(result);
         return result;
       } catch (e) {
         setStatus("error");
@@ -63,13 +66,12 @@ export function BankProvider({ children }) {
     [apply]
   );
 
-  // Re-fetch the latest data for the saved connection (the "re-sync" button).
+  // Re-fetch the latest data (the "re-sync" button).
   const refresh = useCallback(async () => {
-    if (!conn.current?.customerId) return;
     setRefreshing(true);
     try {
-      const r = await bankProvider.fetchData(conn.current);
-      await apply(r);
+      const r = await bankProvider.fetchData();
+      apply(r);
     } catch {
       /* keep existing data on a failed refresh */
     } finally {
@@ -77,13 +79,17 @@ export function BankProvider({ children }) {
     }
   }, [apply]);
 
+  // Explicitly unlink the bank (server-side). Different from signing out.
   const disconnect = useCallback(async () => {
-    conn.current = null;
+    try {
+      await bankProvider.disconnect?.();
+    } catch {
+      /* best-effort */
+    }
     setAccounts([]);
     setTransactions([]);
     setLastSynced(null);
     setStatus("idle");
-    await clearConnection();
   }, []);
 
   const value = {

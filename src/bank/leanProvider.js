@@ -16,6 +16,7 @@
 // Until your backend + sandbox keys are ready, connect() throws a clear error.
 import { LEAN_BACKEND_URL, LEAN_ENV } from "./config";
 import { SAUDI_BANKS } from "./snbMockData";
+import { getAccessToken } from "../lib/supabase";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -42,12 +43,16 @@ async function wakeUp(onProgress) {
 }
 
 async function api(path, body) {
+  const token = await getAccessToken(); // Supabase JWT → backend knows the user
   let res;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       res = await fetch(`${LEAN_BACKEND_URL}${path}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ env: LEAN_ENV, ...(body || {}) }),
       });
       break;
@@ -108,23 +113,34 @@ export const leanProvider = {
     const entityId = link?.entity_id || link?.entity?.id || link?.payload?.entity_id || undefined;
 
     onProgress?.("Fetching your accounts…");
-    const accRes = await api("/api/lean/accounts", { customerId, entityId });
-    const resolvedEntityId = accRes.entityId || entityId;
+    // The backend ties the customer/entity to the signed-in user (from the JWT),
+    // so we no longer pass ids from the app.
+    const accRes = await api("/api/lean/accounts", {});
 
     onProgress?.("Importing transactions…");
-    const { transactions } = await api("/api/lean/transactions", { customerId, entityId: resolvedEntityId });
+    const { transactions } = accRes.connected
+      ? await api("/api/lean/transactions", {})
+      : { transactions: [] };
 
-    // Return the ids so the app can persist them and re-fetch later.
-    return { accounts: accRes.accounts, transactions, customerId, entityId: resolvedEntityId };
+    return { accounts: accRes.accounts || [], transactions: transactions || [] };
   },
 
-  // Re-fetch with stored ids (restore-on-launch / re-sync) — no LinkSDK consent.
-  async fetchData({ customerId, entityId, onProgress } = {}) {
+  // Re-fetch the signed-in user's data (restore-on-launch / re-sync). No consent.
+  async fetchData({ onProgress } = {}) {
     onProgress?.("Syncing…");
     await wakeUp(onProgress);
-    const accRes = await api("/api/lean/accounts", { customerId, entityId });
-    const eid = accRes.entityId || entityId;
-    const { transactions } = await api("/api/lean/transactions", { customerId, entityId: eid });
-    return { accounts: accRes.accounts, transactions, customerId, entityId: eid };
+    const accRes = await api("/api/lean/accounts", {});
+    if (!accRes.connected) return { accounts: [], transactions: [] };
+    const { transactions } = await api("/api/lean/transactions", {});
+    return { accounts: accRes.accounts || [], transactions: transactions || [] };
+  },
+
+  // Forget the signed-in user's bank connection (server-side).
+  async disconnect() {
+    try {
+      await api("/api/lean/disconnect", {});
+    } catch {
+      /* best-effort */
+    }
   },
 };
