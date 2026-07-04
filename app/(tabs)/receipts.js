@@ -87,7 +87,7 @@ export default function Receipts() {
       </View>
 
       {/* Category filter */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipBar} contentContainerStyle={styles.chipRow}>
         {categories.map((c) => (
           <Chip
             key={c}
@@ -100,7 +100,7 @@ export default function Receipts() {
       </ScrollView>
 
       {/* Date filter */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipBar} contentContainerStyle={styles.chipRow}>
         {DATE_FILTERS.map((d) => (
           <Chip key={d.key} label={d.label} active={dateFilter === d.key} onPress={() => setDateFilter(d.key)} />
         ))}
@@ -109,6 +109,7 @@ export default function Receipts() {
       <FlatList
         data={filtered}
         keyExtractor={(r) => r.id}
+        style={styles.listFill}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={<Text style={styles.emptyText}>No receipts match your filters.</Text>}
@@ -145,8 +146,12 @@ const makeStyles = (colors) =>
       height: 46,
     },
     searchInput: { flex: 1, color: colors.text, marginLeft: spacing.sm, fontSize: 15, outlineStyle: "none" },
-    chipRow: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
-    list: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl },
+    // flexGrow:0 keeps the horizontal filter rows from stretching vertically
+    // into empty space; alignItems:center keeps each chip at its natural height.
+    chipBar: { flexGrow: 0, flexShrink: 0 },
+    chipRow: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, alignItems: "center" },
+    listFill: { flex: 1 }, // claim the remaining space so the chips can't grow into it
+    list: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl, flexGrow: 1 },
     row: {
       flexDirection: "row",
       alignItems: "center",
