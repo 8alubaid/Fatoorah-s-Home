@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { spacing, radius } from "../../src/theme";
+import { spacing, radius, TAB_BAR_SPACE } from "../../src/theme";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
 import { Card, ScreenHeader } from "../../src/components/ui";
 import { useAuth } from "../../src/auth/AuthContext";
@@ -79,7 +79,7 @@ export default function Profile() {
 const makeStyles = (colors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.bg },
-    scroll: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
+    scroll: { paddingHorizontal: spacing.lg, paddingBottom: TAB_BAR_SPACE },
     accountCard: { alignItems: "center", paddingVertical: spacing.xl, marginTop: spacing.sm },
     avatar: {
       width: 72,

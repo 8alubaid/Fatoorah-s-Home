@@ -20,6 +20,8 @@ export const darkColors = {
   onPrimary: "#FFFFFF",
   onPrimaryMuted: "#DDF3E4",
   onPrimaryDivider: "rgba(255,255,255,0.25)",
+  tabBar: "rgba(26,26,29,0.86)", // translucent pill (floating tab bar)
+  tabBarActiveBg: "rgba(52,199,89,0.16)", // active item highlight
 };
 
 // Light palette — matches the light app icon (off-white, deeper green accent).
@@ -40,9 +42,14 @@ export const lightColors = {
   onPrimary: "#FFFFFF",
   onPrimaryMuted: "#E3F5EA",
   onPrimaryDivider: "rgba(255,255,255,0.30)",
+  tabBar: "rgba(255,255,255,0.92)", // translucent pill (floating tab bar)
+  tabBarActiveBg: "rgba(46,158,99,0.14)", // active item highlight
 };
 
 export const getColors = (scheme) => (scheme === "light" ? lightColors : darkColors);
+
+// Vertical space screens leave at the bottom so content clears the floating tab bar.
+export const TAB_BAR_SPACE = 104;
 
 // Per-category color + emoji (theme-independent — readable on both palettes).
 export const categoryMeta = {

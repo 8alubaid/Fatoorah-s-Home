@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TextInput, FlatList } from "react-n
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { spacing, radius, categoryColor, categoryEmoji } from "../../src/theme";
+import { spacing, radius, categoryColor, categoryEmoji, TAB_BAR_SPACE } from "../../src/theme";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
 import { ScreenHeader, Chip, Avatar, EmptyState, ScreenLoading } from "../../src/components/ui";
 import { sortedTransactions, allCategories, parseDate } from "../../src/data";
@@ -151,7 +151,7 @@ const makeStyles = (colors) =>
     chipBar: { flexGrow: 0, flexShrink: 0 },
     chipRow: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, alignItems: "center" },
     listFill: { flex: 1 }, // claim the remaining space so the chips can't grow into it
-    list: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl, flexGrow: 1 },
+    list: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: TAB_BAR_SPACE, flexGrow: 1 },
     row: {
       flexDirection: "row",
       alignItems: "center",

@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { spacing, radius } from "../../src/theme";
+import { spacing, radius, TAB_BAR_SPACE } from "../../src/theme";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
 import { Card, ScreenHeader, SectionTitle, Avatar } from "../../src/components/ui";
 import { reminders, reminderMeta, parseDate } from "../../src/data";
@@ -147,7 +147,7 @@ export default function Reminders() {
 const makeStyles = (colors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.bg },
-    scroll: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
+    scroll: { paddingHorizontal: spacing.lg, paddingBottom: TAB_BAR_SPACE },
     calHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.md },
     calNav: { color: colors.primary, fontSize: 28, fontWeight: "700", paddingHorizontal: spacing.md },
     calTitle: { color: colors.text, fontSize: 17, fontWeight: "700" },

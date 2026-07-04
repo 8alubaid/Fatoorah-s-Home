@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { spacing, radius, categoryColor, categoryEmoji } from "../../src/theme";
+import { spacing, radius, categoryColor, categoryEmoji, TAB_BAR_SPACE } from "../../src/theme";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
 import { Card, ScreenHeader, SectionTitle, ProgressBar, Avatar, EmptyState, ScreenLoading } from "../../src/components/ui";
 import {
@@ -179,7 +179,7 @@ export default function Dashboard() {
 const makeStyles = (colors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.bg },
-    scroll: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
+    scroll: { paddingHorizontal: spacing.lg, paddingBottom: TAB_BAR_SPACE },
     hero: { backgroundColor: colors.primary, borderColor: colors.primary, marginTop: spacing.sm },
     heroLabel: { color: colors.onPrimaryMuted, fontSize: 14, fontWeight: "600" },
     heroAmount: { color: colors.onPrimary, fontSize: 40, fontWeight: "800", marginTop: 4, letterSpacing: -1 },
