@@ -9,18 +9,19 @@ import { AuthProvider, useAuth } from "../src/auth/AuthContext";
 
 function InnerLayout() {
   const { colors, isDark } = useTheme();
-  const { session, loading, configured } = useAuth();
+  const { session, loading, configured, demo } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
   // Route gating — only once Supabase is configured. Signed-out users are sent
-  // to /auth; signed-in users on /auth are sent into the app.
+  // to /auth; signed-in users (or demo mode) on /auth are sent into the app.
   useEffect(() => {
     if (!configured || loading) return;
     const onAuthScreen = segments[0] === "auth";
-    if (!session && !onAuthScreen) router.replace("/auth");
-    else if (session && onAuthScreen) router.replace("/(tabs)");
-  }, [configured, loading, session, segments]);
+    const authed = !!session || demo;
+    if (!authed && !onAuthScreen) router.replace("/auth");
+    else if (authed && onAuthScreen) router.replace("/(tabs)");
+  }, [configured, loading, session, demo, segments]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.bg }}>

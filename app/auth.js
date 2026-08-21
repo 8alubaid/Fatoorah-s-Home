@@ -25,7 +25,7 @@ const LOGO_DARK = require("../assets/logo-dark.png");
 export default function Auth() {
   const { colors, isDark } = useTheme();
   const styles = useThemedStyles(makeStyles);
-  const { signIn, signUp, configured } = useAuth();
+  const { signIn, signUp, configured, enterDemo } = useAuth();
 
   const [mode, setMode] = useState("signin"); // signin | signup
   const isSignup = mode === "signup";
@@ -242,6 +242,23 @@ export default function Auth() {
                 <Text style={styles.switchLink}>{isSignup ? "Sign in" : "Create an account"}</Text>
               </Pressable>
             </View>
+
+            {/* Demo */}
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>or</Text>
+              <View style={styles.dividerLine} />
+            </View>
+            <Pressable
+              onPress={enterDemo}
+              style={({ hovered, pressed }) => [
+                styles.demoBtn,
+                (hovered || pressed) && styles.demoBtnHover,
+              ]}
+            >
+              <Ionicons name="sparkles-outline" size={18} color={colors.primary} />
+              <Text style={styles.demoText}>Explore the demo — no account needed</Text>
+            </Pressable>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -316,4 +333,21 @@ const makeStyles = (colors) =>
     switchRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 6, marginTop: spacing.lg },
     switchMuted: { color: colors.textMuted, fontSize: 14 },
     switchLink: { color: colors.primary, fontSize: 14, fontWeight: "700" },
+    dividerRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginTop: spacing.lg },
+    dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
+    dividerText: { color: colors.textFaint, fontSize: 12, fontWeight: "600" },
+    demoBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      marginTop: spacing.lg,
+      paddingVertical: 13,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    demoBtnHover: { backgroundColor: colors.surfaceAlt },
+    demoText: { color: colors.text, fontSize: 14.5, fontWeight: "700" },
   });

@@ -4,12 +4,13 @@
 // devices and never leaks between users.
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { bankProvider } from "./index";
+import { SNB_ACCOUNTS, SNB_TRANSACTIONS } from "./snbMockData";
 import { useAuth } from "../auth/AuthContext";
 
 const BankCtx = createContext(null);
 
 export function BankProvider({ children }) {
-  const { session } = useAuth();
+  const { session, demo } = useAuth();
   const [accounts, setAccounts] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [status, setStatus] = useState("idle"); // idle | connecting | connected | error
@@ -25,9 +26,15 @@ export function BankProvider({ children }) {
     setStatus(accts.length ? "connected" : "idle");
   }, []);
 
-  // Load the signed-in user's connection on login; clear everything on logout.
+  // Demo mode: load mock data immediately, no backend. Real session: fetch the
+  // user's connection. Signed out and not demo: clear everything.
   useEffect(() => {
     let cancelled = false;
+    if (demo) {
+      apply({ accounts: SNB_ACCOUNTS, transactions: SNB_TRANSACTIONS });
+      setRestoring(false);
+      return;
+    }
     if (!session) {
       setAccounts([]);
       setTransactions([]);
@@ -49,7 +56,7 @@ export function BankProvider({ children }) {
     return () => {
       cancelled = true;
     };
-  }, [session, apply]);
+  }, [session, demo, apply]);
 
   const connect = useCallback(
     async ({ bankId, onProgress, openLinkSDK } = {}) => {
@@ -68,6 +75,10 @@ export function BankProvider({ children }) {
 
   // Re-fetch the latest data (the "re-sync" button).
   const refresh = useCallback(async () => {
+    if (demo) {
+      apply({ accounts: SNB_ACCOUNTS, transactions: SNB_TRANSACTIONS });
+      return;
+    }
     setRefreshing(true);
     try {
       const r = await bankProvider.fetchData();
@@ -77,7 +88,7 @@ export function BankProvider({ children }) {
     } finally {
       setRefreshing(false);
     }
-  }, [apply]);
+  }, [apply, demo]);
 
   // Explicitly unlink the bank (server-side). Different from signing out.
   const disconnect = useCallback(async () => {

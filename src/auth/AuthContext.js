@@ -9,6 +9,8 @@ const AuthCtx = createContext(null);
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Demo mode: explore the app with mock data, no real account or bank needed.
+  const [demo, setDemo] = useState(false);
 
   useEffect(() => {
     if (!supabaseConfigured) {
@@ -28,6 +30,9 @@ export function AuthProvider({ children }) {
     user: session?.user ?? null,
     loading,
     configured: supabaseConfigured,
+    demo,
+    enterDemo: () => setDemo(true),
+    exitDemo: () => setDemo(false),
     signIn: (email, password) =>
       supabase.auth.signInWithPassword({ email: email.trim(), password }),
     signUp: (email, password, fullName) =>
@@ -36,7 +41,10 @@ export function AuthProvider({ children }) {
         password,
         options: fullName ? { data: { full_name: fullName.trim() } } : undefined,
       }),
-    signOut: () => supabase.auth.signOut(),
+    signOut: () => {
+      setDemo(false);
+      return supabase.auth.signOut();
+    },
   };
 
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
