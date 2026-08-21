@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, Platform, ScrollView, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { spacing, radius } from "../src/theme";
 import { useTheme, useThemedStyles } from "../src/ThemeContext";
@@ -7,8 +7,11 @@ import { PrimaryButton } from "../src/components/ui";
 import { useAuth } from "../src/auth/AuthContext";
 import { Pressable } from "react-native";
 
+const LOGO_LIGHT = require("../LIGHT_MODE_LOGO.png");
+const LOGO_DARK = require("../DARK_MODE_LOGO.png");
+
 export default function Auth() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { signIn, signUp, configured } = useAuth();
 
@@ -48,6 +51,8 @@ export default function Auth() {
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+          <View style={styles.container}>
+          <Image source={isDark ? LOGO_DARK : LOGO_LIGHT} style={styles.logo} resizeMode="contain" />
           <Text style={styles.brand}>Fatoorah</Text>
           <Text style={styles.tagline}>Your receipts & spending, in one place.</Text>
 
@@ -105,6 +110,7 @@ export default function Auth() {
               </Text>
             </Pressable>
           </View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -114,7 +120,10 @@ export default function Auth() {
 const makeStyles = (colors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.bg },
-    scroll: { flexGrow: 1, justifyContent: "center", padding: spacing.xl },
+    scroll: { flexGrow: 1, justifyContent: "center", alignItems: "center", padding: spacing.xl },
+    // Keep everything in a phone-width column so it doesn't stretch on desktop web.
+    container: { width: "100%", maxWidth: 400, alignSelf: "center" },
+    logo: { width: 88, height: 88, alignSelf: "center", marginBottom: spacing.md },
     brand: { color: colors.text, fontSize: 34, fontWeight: "800", textAlign: "center", letterSpacing: -0.5 },
     tagline: { color: colors.textMuted, fontSize: 14, textAlign: "center", marginTop: 6, marginBottom: spacing.xl },
     card: {
@@ -123,6 +132,12 @@ const makeStyles = (colors) =>
       borderWidth: 1,
       borderColor: colors.border,
       padding: spacing.lg,
+      // Soft lift so the sign-in card reads as a real card on the wide web canvas.
+      shadowColor: "#000",
+      shadowOpacity: 0.12,
+      shadowRadius: 24,
+      shadowOffset: { width: 0, height: 12 },
+      elevation: 6,
     },
     title: { color: colors.text, fontSize: 20, fontWeight: "800", marginBottom: spacing.lg },
     label: { color: colors.textMuted, fontSize: 13, fontWeight: "600", marginBottom: 6, marginTop: spacing.sm },
