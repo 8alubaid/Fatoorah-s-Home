@@ -1,18 +1,27 @@
 import React from "react";
+import { Platform } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../src/ThemeContext";
+import WebSidebar from "../../src/components/WebSidebar";
+import { SIDEBAR_WIDTH } from "../../src/theme";
 
 const icon = (name) => ({ color, size }) => <Ionicons name={name} size={size - 1} color={color} />;
+const isWeb = Platform.OS === "web";
 
 export default function TabsLayout() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   return (
     <Tabs
+      // Web: a fixed left sidebar replaces the bottom tab bar; content is inset
+      // past it. Native: the floating pill below.
+      tabBar={isWeb ? (props) => <WebSidebar {...props} /> : undefined}
+      sceneContainerStyle={isWeb ? { paddingLeft: SIDEBAR_WIDTH } : undefined}
       screenOptions={{
         headerShown: false,
+        sceneStyle: isWeb ? { paddingLeft: SIDEBAR_WIDTH } : undefined,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textFaint,
         tabBarActiveBackgroundColor: colors.tabBarActiveBg,

@@ -1,9 +1,11 @@
 import React, { useMemo, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TextInput, FlatList } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TextInput, FlatList, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { spacing, radius, categoryColor, categoryEmoji, TAB_BAR_SPACE } from "../../src/theme";
+import { spacing, radius, categoryColor, categoryEmoji, TAB_BAR_SPACE, CONTENT_MAX } from "../../src/theme";
+
+const isWeb = Platform.OS === "web";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
 import { ScreenHeader, Chip, Avatar, EmptyState, ScreenLoading } from "../../src/components/ui";
 import { sortedTransactions, allCategories, parseDate } from "../../src/data";
@@ -69,6 +71,7 @@ export default function Receipts() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
+      <View style={styles.webWrap}>
       <ScreenHeader title="Receipts 🧾" subtitle={`${filtered.length} receipts · ${money(total)}`} />
 
       {/* Search */}
@@ -127,6 +130,7 @@ export default function Receipts() {
           </View>
         )}
       />
+      </View>
     </SafeAreaView>
   );
 }
@@ -134,6 +138,8 @@ export default function Receipts() {
 const makeStyles = (colors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.bg },
+    // On web, keep the whole screen in a centered, comfortable-width column.
+    webWrap: isWeb ? { flex: 1, width: "100%", maxWidth: CONTENT_MAX, alignSelf: "center" } : { flex: 1 },
     searchWrap: {
       flexDirection: "row",
       alignItems: "center",
@@ -151,7 +157,7 @@ const makeStyles = (colors) =>
     chipBar: { flexGrow: 0, flexShrink: 0 },
     chipRow: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, alignItems: "center" },
     listFill: { flex: 1 }, // claim the remaining space so the chips can't grow into it
-    list: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: TAB_BAR_SPACE, flexGrow: 1 },
+    list: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: isWeb ? spacing.xxl : TAB_BAR_SPACE, flexGrow: 1 },
     row: {
       flexDirection: "row",
       alignItems: "center",

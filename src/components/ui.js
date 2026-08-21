@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, Pressable, ActivityIndicator, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { radius, spacing } from "../theme";
 import { useTheme, useThemedStyles } from "../ThemeContext";
@@ -38,7 +38,8 @@ export function ScreenHeader({ title, subtitle }) {
         <Text style={styles.headerTitle}>{title}</Text>
         {subtitle ? <Text style={styles.headerSubtitle}>{subtitle}</Text> : null}
       </View>
-      <ThemeToggle />
+      {/* On web the sidebar owns the theme toggle, so skip the header one. */}
+      {Platform.OS === "web" ? null : <ThemeToggle />}
     </View>
   );
 }
@@ -196,10 +197,10 @@ const makeStyles = (colors) =>
     buttonPressed: { opacity: 0.85 },
     buttonDisabled: { backgroundColor: colors.surfaceAlt },
     buttonText: { color: colors.white, fontSize: 16, fontWeight: "700" },
-    empty: { alignItems: "center", justifyContent: "center", paddingHorizontal: spacing.xl, paddingVertical: spacing.xxl },
+    empty: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: spacing.xl, paddingVertical: spacing.xxl },
     emptyEmoji: { fontSize: 48, marginBottom: spacing.md },
     emptyTitle: { color: colors.text, fontSize: 20, fontWeight: "800", textAlign: "center" },
-    emptyMessage: { color: colors.textMuted, fontSize: 14, textAlign: "center", marginTop: spacing.sm, lineHeight: 20 },
+    emptyMessage: { color: colors.textMuted, fontSize: 14, textAlign: "center", marginTop: spacing.sm, lineHeight: 20, maxWidth: 440 },
     loading: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl },
     loadingLabel: { color: colors.textMuted, fontSize: 14, marginTop: spacing.md },
   });

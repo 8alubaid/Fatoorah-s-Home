@@ -1,11 +1,13 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { spacing, radius, categoryColor, categoryEmoji, TAB_BAR_SPACE } from "../../src/theme";
+import { spacing, radius, categoryColor, categoryEmoji, TAB_BAR_SPACE, CONTENT_MAX } from "../../src/theme";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
 import { Card, ScreenHeader, SectionTitle, ProgressBar, Avatar, EmptyState, ScreenLoading } from "../../src/components/ui";
+
+const isWeb = Platform.OS === "web";
 import {
   totalForMonth,
   totalForWeek,
@@ -179,7 +181,11 @@ export default function Dashboard() {
 const makeStyles = (colors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.bg },
-    scroll: { paddingHorizontal: spacing.lg, paddingBottom: TAB_BAR_SPACE },
+    scroll: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: isWeb ? spacing.xxl : TAB_BAR_SPACE,
+      ...(isWeb && { maxWidth: CONTENT_MAX, width: "100%", alignSelf: "center", paddingTop: spacing.md }),
+    },
     hero: { backgroundColor: colors.primary, borderColor: colors.primary, marginTop: spacing.sm },
     heroLabel: { color: colors.onPrimaryMuted, fontSize: 14, fontWeight: "600" },
     heroAmount: { color: colors.onPrimary, fontSize: 40, fontWeight: "800", marginTop: 4, letterSpacing: -1 },

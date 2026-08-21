@@ -51,6 +51,10 @@ export const getColors = (scheme) => (scheme === "light" ? lightColors : darkCol
 // Vertical space screens leave at the bottom so content clears the floating tab bar.
 export const TAB_BAR_SPACE = 104;
 
+// Web layout: fixed left sidebar width + comfortable reading width for content.
+export const SIDEBAR_WIDTH = 244;
+export const CONTENT_MAX = 880;
+
 // Per-category color + emoji (theme-independent — readable on both palettes).
 export const categoryMeta = {
   Food: { color: "#34C759", emoji: "🍔" },
