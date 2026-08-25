@@ -5,6 +5,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { bankProvider } from "./index";
 import { SNB_ACCOUNTS, SNB_TRANSACTIONS } from "./snbMockData";
+import { listImported, clearImported as apiClearImported } from "../statements/statementsApi";
 import { useAuth } from "../auth/AuthContext";
 
 const BankCtx = createContext(null);
@@ -20,10 +21,11 @@ export function BankProvider({ children }) {
 
   const apply = useCallback((r) => {
     const accts = r.accounts || [];
+    const txns = r.transactions || [];
     setAccounts(accts);
-    setTransactions(r.transactions || []);
+    setTransactions(txns);
     setLastSynced(Date.now());
-    setStatus(accts.length ? "connected" : "idle");
+    setStatus(accts.length || txns.length ? "connected" : "idle");
   }, []);
 
   // Demo mode: load mock data immediately, no backend. Real session: fetch the
@@ -43,11 +45,13 @@ export function BankProvider({ children }) {
       setRestoring(false);
       return;
     }
+    // Bank auto-sync is paused (coming soon), so real users' data comes from
+    // their imported statements (stored per-user in Supabase).
     (async () => {
       setRestoring(true);
       try {
-        const r = await bankProvider.fetchData();
-        if (!cancelled) apply(r);
+        const transactions = await listImported();
+        if (!cancelled) apply({ accounts: [], transactions });
       } catch {
         if (!cancelled) setStatus("idle");
       }
@@ -73,7 +77,8 @@ export function BankProvider({ children }) {
     [apply]
   );
 
-  // Re-fetch the latest data (the "re-sync" button).
+  // Reload the latest imported transactions (also the "re-sync" button, and
+  // called by the import screen after a successful upload).
   const refresh = useCallback(async () => {
     if (demo) {
       apply({ accounts: SNB_ACCOUNTS, transactions: SNB_TRANSACTIONS });
@@ -81,8 +86,8 @@ export function BankProvider({ children }) {
     }
     setRefreshing(true);
     try {
-      const r = await bankProvider.fetchData();
-      apply(r);
+      const transactions = await listImported();
+      apply({ accounts: [], transactions });
     } catch {
       /* keep existing data on a failed refresh */
     } finally {
@@ -90,18 +95,20 @@ export function BankProvider({ children }) {
     }
   }, [apply, demo]);
 
-  // Explicitly unlink the bank (server-side). Different from signing out.
+  // Clear all imported data (server-side). Different from signing out.
   const disconnect = useCallback(async () => {
-    try {
-      await bankProvider.disconnect?.();
-    } catch {
-      /* best-effort */
+    if (!demo) {
+      try {
+        await apiClearImported();
+      } catch {
+        /* best-effort */
+      }
     }
     setAccounts([]);
     setTransactions([]);
     setLastSynced(null);
     setStatus("idle");
-  }, []);
+  }, [demo]);
 
   const value = {
     accounts,

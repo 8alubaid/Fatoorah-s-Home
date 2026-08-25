@@ -61,9 +61,10 @@ export default function Receipts() {
         <EmptyState
           emoji="🧾"
           title="No receipts yet"
-          message="Connect your bank and your transactions will appear here automatically — searchable and filterable by category and date."
-          buttonLabel="Connect bank"
-          onPress={() => router.push("/connect")}
+          message="Upload a bank statement (PDF) and your transactions will appear here automatically — searchable and filterable by category and date."
+          buttonLabel="Upload statement"
+          onPress={() => router.push("/import")}
+          note="🔒 Automatic bank sync — coming soon"
         />
       </SafeAreaView>
     );

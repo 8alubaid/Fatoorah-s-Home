@@ -56,9 +56,10 @@ export default function Insights() {
         <EmptyState
           emoji="📊"
           title="No data to chart yet"
-          message="Once your bank is connected, you'll see spending trends, weekly charts, and category breakdowns here."
-          buttonLabel="Connect bank"
-          onPress={() => router.push("/connect")}
+          message="Upload a bank statement (PDF) and you'll see spending trends, weekly charts, and category breakdowns here."
+          buttonLabel="Upload statement"
+          onPress={() => router.push("/import")}
+          note="🔒 Automatic bank sync — coming soon"
         />
       </SafeAreaView>
     );

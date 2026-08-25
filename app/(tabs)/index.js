@@ -39,11 +39,12 @@ export default function Dashboard() {
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <ScreenHeader title="Fatoorah" subtitle={`Hello 👋 · ${monthLabel(TODAY)}`} />
         <EmptyState
-          emoji="🏦"
-          title="Connect your bank"
-          message="Link your SNB account to automatically import receipts and track your spending. Your login stays with your bank — Fatoorah only gets read-only access."
-          buttonLabel="Connect bank"
-          onPress={() => router.push("/connect")}
+          emoji="🧾"
+          title="Add your transactions"
+          message="Upload a bank statement (PDF) and Fatoorah reads and categorizes every transaction for you — then tracks your spending automatically."
+          buttonLabel="Upload statement"
+          onPress={() => router.push("/import")}
+          note="🔒 Automatic bank sync — coming soon"
         />
       </SafeAreaView>
     );
@@ -88,38 +89,57 @@ export default function Dashboard() {
           </View>
         </Card>
 
-        {/* Linked accounts */}
+        {/* Accounts (demo/bank) OR imported-statement summary */}
         <SectionTitle right={lastSynced ? `Synced ${timeAgo(lastSynced)}` : undefined}>
-          Linked accounts
+          {accounts.length > 0 ? "Linked accounts" : "Your transactions"}
         </SectionTitle>
         <Card style={{ paddingVertical: spacing.xs }}>
-          {accounts.map((a, i) => (
-            <View key={a.id} style={[styles.acctRow, i < accounts.length - 1 && styles.divider]}>
-              <Avatar emoji="🏦" color={colors.primary} />
-              <View style={styles.acctMid}>
-                <Text style={styles.acctName}>{a.name}</Text>
-                <Text style={styles.acctSub}>{a.bankName} · {a.mask}</Text>
+          {accounts.length > 0 ? (
+            accounts.map((a, i) => (
+              <View key={a.id} style={[styles.acctRow, i < accounts.length - 1 && styles.divider]}>
+                <Avatar emoji="🏦" color={colors.primary} />
+                <View style={styles.acctMid}>
+                  <Text style={styles.acctName}>{a.name}</Text>
+                  <Text style={styles.acctSub}>{a.bankName} · {a.mask}</Text>
+                </View>
+                <Text style={[styles.acctBalance, a.balance < 0 && { color: colors.danger }]}>
+                  {money(a.balance)}
+                </Text>
               </View>
-              <Text style={[styles.acctBalance, a.balance < 0 && { color: colors.danger }]}>
-                {money(a.balance)}
-              </Text>
+            ))
+          ) : (
+            <View style={styles.acctRow}>
+              <Avatar emoji="🧾" color={colors.primary} />
+              <View style={styles.acctMid}>
+                <Text style={styles.acctName}>{transactions.length} transactions imported</Text>
+                <Text style={styles.acctSub}>From your uploaded statements</Text>
+              </View>
             </View>
-          ))}
+          )}
           <View style={styles.acctActions}>
-            <Pressable onPress={refresh} disabled={refreshing} style={styles.acctAction}>
-              {refreshing ? (
-                <ActivityIndicator size="small" color={colors.primary} />
-              ) : (
-                <Ionicons name="refresh" size={16} color={colors.primary} />
-              )}
-              <Text style={[styles.acctActionText, { color: colors.primary }]}>
-                {refreshing ? "Syncing…" : "Re-sync"}
-              </Text>
-            </Pressable>
+            {accounts.length > 0 ? (
+              <Pressable onPress={refresh} disabled={refreshing} style={styles.acctAction}>
+                {refreshing ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <Ionicons name="refresh" size={16} color={colors.primary} />
+                )}
+                <Text style={[styles.acctActionText, { color: colors.primary }]}>
+                  {refreshing ? "Syncing…" : "Re-sync"}
+                </Text>
+              </Pressable>
+            ) : (
+              <Pressable onPress={() => router.push("/import")} style={styles.acctAction}>
+                <Ionicons name="add" size={18} color={colors.primary} />
+                <Text style={[styles.acctActionText, { color: colors.primary }]}>Add statement</Text>
+              </Pressable>
+            )}
             <View style={styles.acctActionDivider} />
             <Pressable onPress={disconnect} style={styles.acctAction}>
-              <Ionicons name="unlink" size={16} color={colors.danger} />
-              <Text style={[styles.acctActionText, { color: colors.danger }]}>Disconnect</Text>
+              <Ionicons name={accounts.length > 0 ? "unlink" : "trash-outline"} size={16} color={colors.danger} />
+              <Text style={[styles.acctActionText, { color: colors.danger }]}>
+                {accounts.length > 0 ? "Disconnect" : "Clear"}
+              </Text>
             </Pressable>
           </View>
         </Card>

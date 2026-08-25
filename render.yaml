@@ -26,3 +26,10 @@ services:
         sync: false # set in the Render dashboard
       - key: LEAN_CLIENT_SECRET
         sync: false # set in the Render dashboard
+      # Statement import (PDF → Claude). Required for the upload feature.
+      - key: ANTHROPIC_API_KEY
+        sync: false # set in the Render dashboard (console.anthropic.com)
+      # Optional: model used to read statements. Defaults to claude-opus-5.
+      # Set to claude-haiku-4-5 to cut per-file cost for higher volume.
+      - key: STATEMENT_MODEL
+        sync: false

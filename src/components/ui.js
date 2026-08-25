@@ -109,7 +109,7 @@ export function PrimaryButton({ label, onPress, disabled, style }) {
   );
 }
 
-export function EmptyState({ emoji, title, message, buttonLabel, onPress }) {
+export function EmptyState({ emoji, title, message, buttonLabel, onPress, note }) {
   const styles = useThemedStyles(makeStyles);
   return (
     <View style={styles.empty}>
@@ -119,6 +119,7 @@ export function EmptyState({ emoji, title, message, buttonLabel, onPress }) {
       {buttonLabel ? (
         <PrimaryButton label={buttonLabel} onPress={onPress} style={{ marginTop: spacing.lg }} />
       ) : null}
+      {note ? <Text style={styles.emptyNote}>{note}</Text> : null}
     </View>
   );
 }
@@ -201,6 +202,7 @@ const makeStyles = (colors) =>
     emptyEmoji: { fontSize: 48, marginBottom: spacing.md },
     emptyTitle: { color: colors.text, fontSize: 20, fontWeight: "800", textAlign: "center" },
     emptyMessage: { color: colors.textMuted, fontSize: 14, textAlign: "center", marginTop: spacing.sm, lineHeight: 20, maxWidth: 440 },
+    emptyNote: { color: colors.textFaint, fontSize: 12.5, textAlign: "center", marginTop: spacing.lg, fontWeight: "600" },
     loading: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl },
     loadingLabel: { color: colors.textMuted, fontSize: 14, marginTop: spacing.md },
   });

@@ -14,7 +14,7 @@ export default function Profile() {
   const { colors, isDark, toggle } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { user, signOut } = useAuth();
-  const { connected, accounts } = useBank();
+  const { transactions } = useBank();
   const [busy, setBusy] = useState(false);
 
   const email = user?.email || "—";
@@ -58,11 +58,17 @@ export default function Profile() {
           </Pressable>
           <View style={styles.divider} />
           <View style={styles.row}>
-            <Ionicons name="wallet-outline" size={20} color={colors.textMuted} />
-            <Text style={styles.rowLabel}>Bank</Text>
+            <Ionicons name="receipt-outline" size={20} color={colors.textMuted} />
+            <Text style={styles.rowLabel}>Transactions</Text>
             <Text style={styles.rowValue}>
-              {connected ? `${accounts.length} account${accounts.length === 1 ? "" : "s"}` : "Not linked"}
+              {transactions.length ? `${transactions.length} imported` : "None yet"}
             </Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.row}>
+            <Ionicons name="sync-outline" size={20} color={colors.textMuted} />
+            <Text style={styles.rowLabel}>Bank auto-sync</Text>
+            <Text style={styles.rowValue}>Coming soon</Text>
           </View>
         </Card>
 

@@ -9,6 +9,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import multer from "multer";
+import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
 
 dotenv.config();
@@ -19,6 +21,10 @@ const {
   LEAN_CLIENT_SECRET,
   SUPABASE_URL,
   SUPABASE_SERVICE_ROLE_KEY,
+  ANTHROPIC_API_KEY,
+  // Model used to read statements. Defaults to Opus 5; set to e.g.
+  // "claude-haiku-4-5" to cut per-file cost for high volume.
+  STATEMENT_MODEL = "claude-opus-5",
   PORT = 4000,
 } = process.env;
 
@@ -34,6 +40,14 @@ const AUTH_BASE =
   LEAN_ENV === "production" ? "https://auth.sa.leantech.me" : "https://auth.sandbox.sa.leantech.me";
 const API_BASE =
   LEAN_ENV === "production" ? "https://sa.leantech.me" : "https://sandbox.sa.leantech.me";
+
+// Claude client — reads uploaded statement PDFs. Present only when the key is set.
+const anthropic = ANTHROPIC_API_KEY ? new Anthropic({ apiKey: ANTHROPIC_API_KEY }) : null;
+// In-memory upload handling (PDF never touches disk). 20 MB cap.
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
+
+// The app's fixed category set — the model must map every transaction to one.
+const CATEGORIES = ["Food", "Shopping", "Transport", "Bills", "Groceries", "Entertainment", "Health", "Other"];
 
 const app = express();
 app.use(cors());
@@ -401,9 +415,154 @@ app.post("/api/lean/disconnect", async (req, res) => {
   }
 });
 
+// ───────────────────────────────────────────────────────────────────────────
+// Statement import — upload a bank-statement PDF, Claude reads it into clean,
+// categorized transactions, which we store per-user in Supabase.
+// ───────────────────────────────────────────────────────────────────────────
+
+const STATEMENT_PROMPT = `You are a bank-statement parser for a Saudi personal-finance app. You are given a bank account statement PDF.
+
+Extract EVERY outgoing transaction: purchases, POS/card payments, bill payments, fees, and transfers OUT.
+IGNORE all incoming money (salary, deposits, refunds, transfers IN) and non-transaction rows (opening/closing balance, subtotals, summaries, headers).
+
+For each transaction produce an object with:
+- "merchant": a short, clean merchant/payee name (e.g. "Starbucks", "STC", "Jarir"). Strip bank reference codes.
+- "category": EXACTLY one of ${CATEGORIES.join(", ")}.
+- "amount": the amount spent as a POSITIVE number in SAR. For a foreign-currency purchase, use the settled SAR amount shown on the statement.
+- "date": the transaction date as "YYYY-MM-DD".
+- "note": a short original description, or "".
+
+Respond with ONLY a JSON array (no prose, no markdown, no code fences). If there are no transactions, return [].`;
+
+// Pull the JSON array out of the model's text response, defensively.
+function extractTxns(text) {
+  let t = (text || "").trim();
+  const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence) t = fence[1].trim();
+  const start = t.indexOf("[");
+  const end = t.lastIndexOf("]");
+  if (start >= 0 && end > start) t = t.slice(start, end + 1);
+  const arr = JSON.parse(t);
+  return Array.isArray(arr) ? arr : [];
+}
+
+// Keep only well-formed rows; coerce category/amount/date into the app's shape.
+function normalizeParsed(raw) {
+  const out = [];
+  for (const r of raw) {
+    const amount = Math.abs(Number(r?.amount));
+    const date = typeof r?.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(r.date) ? r.date : null;
+    if (!r?.merchant || !Number.isFinite(amount) || amount <= 0 || !date) continue;
+    out.push({
+      merchant: String(r.merchant).slice(0, 60),
+      category: CATEGORIES.includes(r.category) ? r.category : "Other",
+      amount,
+      date,
+      note: r.note ? String(r.note).slice(0, 200) : "",
+    });
+  }
+  return out;
+}
+
+// A stored row → the flat transaction shape the app expects.
+const toApp = (row) => ({
+  id: row.id,
+  merchant: row.merchant,
+  category: row.category,
+  amount: Number(row.amount),
+  date: row.txn_date,
+  note: row.note || "",
+  accountId: "imported",
+});
+
+app.post("/api/statements/analyze", upload.single("file"), async (req, res) => {
+  const user = await requireUser(req, res);
+  if (!user) return;
+  if (!anthropic) return res.status(501).json({ error: "AI not configured — set ANTHROPIC_API_KEY on the backend." });
+  if (!req.file) return res.status(400).json({ error: "No PDF uploaded." });
+
+  try {
+    const b64 = req.file.buffer.toString("base64");
+    // Claude reads the PDF directly (layout, tables, even scanned pages).
+    const stream = anthropic.messages.stream({
+      model: STATEMENT_MODEL,
+      max_tokens: 32000,
+      output_config: { effort: "low" }, // extraction, not deep reasoning
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "document", source: { type: "base64", media_type: "application/pdf", data: b64 } },
+            { type: "text", text: STATEMENT_PROMPT },
+          ],
+        },
+      ],
+    });
+    const message = await stream.finalMessage();
+    const text = message.content.filter((b) => b.type === "text").map((b) => b.text).join("\n");
+
+    let parsed;
+    try {
+      parsed = normalizeParsed(extractTxns(text));
+    } catch {
+      return res.status(422).json({ error: "Couldn't read transactions from that PDF. Is it a bank statement?" });
+    }
+    if (!parsed.length) {
+      return res.status(422).json({ error: "No transactions found in that statement." });
+    }
+
+    const rows = parsed.map((t) => ({
+      user_id: user.id,
+      merchant: t.merchant,
+      category: t.category,
+      amount: t.amount,
+      txn_date: t.date,
+      note: t.note,
+      source: "statement",
+    }));
+    const { data, error } = await supabase.from("imported_transactions").insert(rows).select();
+    if (error) return res.status(502).json({ error: `Couldn't save transactions: ${error.message}` });
+
+    const transactions = (data || []).map(toApp);
+    res.json({ count: transactions.length, transactions });
+  } catch (e) {
+    res.status(502).json({ error: e.message || "Analysis failed." });
+  }
+});
+
+app.post("/api/statements/list", async (req, res) => {
+  const user = await requireUser(req, res);
+  if (!user) return;
+  try {
+    const { data, error } = await supabase
+      .from("imported_transactions")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("txn_date", { ascending: false });
+    if (error) return res.status(502).json({ error: error.message });
+    res.json({ transactions: (data || []).map(toApp) });
+  } catch (e) {
+    res.status(502).json({ error: e.message });
+  }
+});
+
+app.post("/api/statements/clear", async (req, res) => {
+  const user = await requireUser(req, res);
+  if (!user) return;
+  try {
+    await supabase.from("imported_transactions").delete().eq("user_id", user.id);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(502).json({ error: e.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Fatoorah server on http://localhost:${PORT}  (Lean env: ${LEAN_ENV})`);
   if (!LEAN_APP_ID || !LEAN_CLIENT_SECRET) {
     console.log("⚠️  No Lean credentials yet — copy .env.example to .env and fill them in.");
+  }
+  if (!anthropic) {
+    console.log("⚠️  No ANTHROPIC_API_KEY yet — statement import (PDF) is disabled until it's set.");
   }
 });
