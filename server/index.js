@@ -246,7 +246,11 @@ async function fetchAccounts(oauth, entityId) {
   return accounts;
 }
 
-app.get("/health", (_req, res) => res.json({ ok: true, env: LEAN_ENV }));
+// `ai` reports only WHETHER the Anthropic key is configured (never its value),
+// so setup can be verified without signing in.
+app.get("/health", (_req, res) =>
+  res.json({ ok: true, env: LEAN_ENV, ai: !!anthropic, db: !!supabase })
+);
 
 // Quick check that your App Id + Client Secret are valid — mints an API token
 // and reports success WITHOUT exposing the token. Visit http://localhost:4000/api/lean/verify
