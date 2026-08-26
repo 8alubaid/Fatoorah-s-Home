@@ -247,10 +247,18 @@ async function fetchAccounts(oauth, entityId) {
 }
 
 // `ai` reports only WHETHER the Anthropic key is configured (never its value),
-// so setup can be verified without signing in.
-app.get("/health", (_req, res) =>
-  res.json({ ok: true, env: LEAN_ENV, ai: !!anthropic, db: !!supabase })
-);
+// so setup can be verified without signing in. `table` confirms the
+// imported_transactions migration has been run.
+app.get("/health", async (_req, res) => {
+  let table = false;
+  if (supabase) {
+    const { error } = await supabase
+      .from("imported_transactions")
+      .select("id", { count: "exact", head: true });
+    table = !error;
+  }
+  res.json({ ok: true, env: LEAN_ENV, ai: !!anthropic, db: !!supabase, table });
+});
 
 // Quick check that your App Id + Client Secret are valid — mints an API token
 // and reports success WITHOUT exposing the token. Visit http://localhost:4000/api/lean/verify
