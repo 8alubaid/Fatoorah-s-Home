@@ -30,10 +30,12 @@ export const timeAgo = (ts) => {
 };
 
 // "in 5 days", "tomorrow", "today", "3 days ago" — relative to TODAY.
-export const relativeDays = (iso) => {
+// `anchor` lets callers measure against their data's newest date instead of the
+// wall clock (an imported statement can be weeks old).
+export const relativeDays = (iso, anchor = TODAY) => {
   const d = parseDate(iso);
   const a = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const b = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
+  const b = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate());
   const diff = Math.round((a - b) / 86400000);
   if (diff === 0) return "Today";
   if (diff === 1) return "Tomorrow";
