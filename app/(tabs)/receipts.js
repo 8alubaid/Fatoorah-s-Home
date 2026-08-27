@@ -8,7 +8,7 @@ import { spacing, radius, categoryColor, categoryEmoji, TAB_BAR_SPACE, CONTENT_M
 const isWeb = Platform.OS === "web";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
 import { ScreenHeader, Chip, Avatar, EmptyState, ScreenLoading } from "../../src/components/ui";
-import { sortedTransactions, allCategories, parseDate } from "../../src/data";
+import { sortedTransactions, allCategories, parseDate, latestTxDate } from "../../src/data";
 import { money, shortDate, TODAY } from "../../src/utils";
 import { useBank } from "../../src/bank/BankContext";
 
@@ -34,9 +34,13 @@ export default function Receipts() {
       if (query && !`${r.merchant} ${r.category} ${r.note}`.toLowerCase().includes(query.toLowerCase()))
         return false;
       if (dateFilter !== "all") {
+        // Anchor to the newest transaction, not the wall clock: an imported
+        // statement can be weeks old, and "Last 7 days" should still mean the
+        // last 7 days OF YOUR DATA rather than silently showing nothing.
         const days = Number(dateFilter);
-        const cutoff = new Date(TODAY);
-        cutoff.setDate(TODAY.getDate() - days);
+        const anchor = latestTxDate(transactions) || TODAY;
+        const cutoff = new Date(anchor);
+        cutoff.setDate(anchor.getDate() - days);
         if (parseDate(r.date) < cutoff) return false;
       }
       return true;

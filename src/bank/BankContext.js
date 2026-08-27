@@ -117,7 +117,8 @@ export function BankProvider({ children }) {
     restoring,
     refreshing,
     lastSynced,
-    connected: accounts.length > 0,
+    // Connected = we have data to show: linked bank accounts OR imported transactions.
+    connected: accounts.length > 0 || transactions.length > 0,
     provider: bankProvider,
     connect,
     refresh,
