@@ -62,6 +62,29 @@ export const monthStats = (txns, ref) => {
   };
 };
 
+// The day range covered by weekly bucket `index` of `ref`'s month, or null when
+// the bucket falls past the end of the month.
+export const weekRange = (ref, index) => {
+  const daysInMonth = new Date(ref.getFullYear(), ref.getMonth() + 1, 0).getDate();
+  const start = index * 7 + 1;
+  if (start > daysInMonth) return null;
+  return { start, end: Math.min(start + 6, daysInMonth) };
+};
+
+// Every transaction inside that bucket, newest first — powers the per-week
+// purchase list under the bar chart.
+export const transactionsForWeek = (txns, ref, index) => {
+  const range = weekRange(ref, index);
+  if (!range) return [];
+  return (txns || [])
+    .filter((t) => {
+      if (!sameMonth(t.date, ref)) return false;
+      const day = parseDate(t.date).getDate();
+      return day >= range.start && day <= range.end;
+    })
+    .sort((a, b) => parseDate(b.date) - parseDate(a.date));
+};
+
 // ---- Recurring payment / subscription detection ----
 //
 // Reminders are derived from real spending: we look for the same merchant

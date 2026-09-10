@@ -7,7 +7,7 @@ import { spacing, radius, categoryColor, categoryIcon, paletteColor, CONTENT_MAX
 
 const isWeb = Platform.OS === "web";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
-import { Card, ScreenHeader, SectionTitle, EmptyState, ScreenLoading } from "../../src/components/ui";
+import { Card, ScreenHeader, SectionTitle, Avatar, EmptyState, ScreenLoading } from "../../src/components/ui";
 import DonutChart from "../../src/components/DonutChart";
 import {
   categoryTotals,
@@ -17,6 +17,8 @@ import {
   merchantTotals,
   topWithOther,
   monthStats,
+  weekRange,
+  transactionsForWeek,
 } from "../../src/data";
 import { money, monthLabel, shortDate, TODAY } from "../../src/utils";
 import { useBank } from "../../src/bank/BankContext";
@@ -35,14 +37,14 @@ function weeklyBuckets(daily) {
   return buckets;
 }
 
-// Day range for a week bucket within `ref`'s month, e.g. "7/1–7", "7/8–14".
+const MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// "6/1–7" could be read as a date or a fraction, and gave no clue which month
+// it belonged to. Naming the month removes both ambiguities: "Jun 1–7".
 function weekLabel(ref, index) {
-  const m = ref.getMonth() + 1;
-  const daysInMonth = new Date(ref.getFullYear(), ref.getMonth() + 1, 0).getDate();
-  const start = index * 7 + 1;
-  if (start > daysInMonth) return "";
-  const end = Math.min(start + 6, daysInMonth);
-  return `${m}/${start}–${end}`;
+  const range = weekRange(ref, index);
+  if (!range) return "";
+  return `${MONTH_ABBR[ref.getMonth()]} ${range.start}–${range.end}`;
 }
 
 const pct = (part, whole) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
@@ -55,6 +57,7 @@ export default function Insights() {
   const [monthsBack, setMonthsBack] = useState(0);
   const [pickedCat, setPickedCat] = useState(null);
   const [pickedMerchant, setPickedMerchant] = useState(null);
+  const [pickedWeek, setPickedWeek] = useState(null);
 
   if (restoring) {
     return (
@@ -120,6 +123,8 @@ export default function Insights() {
   const activeMerchant =
     pickedMerchant && merchants.some((m) => m.merchant === pickedMerchant) ? pickedMerchant : null;
   const toggleMerchant = (key) => setPickedMerchant((prev) => (prev === key ? null : key));
+
+  const weekTxns = pickedWeek === null ? [] : transactionsForWeek(transactions, ref, pickedWeek);
 
   const merchantSlices = merchants.map((m, i) => ({
     key: m.merchant,
@@ -263,23 +268,84 @@ export default function Insights() {
           </>
         ) : null}
 
-        {/* Weekly bar chart */}
+        {/* Weekly bar chart — tap a bar for that week's purchases */}
         <SectionTitle>Spending by week</SectionTitle>
         <Card>
           <View style={styles.barChart}>
-            {weeks.map((v, i) => (
-              <View key={i} style={styles.barCol}>
-                <Text style={styles.barValue} numberOfLines={1}>
-                  {v > 0 ? money(Math.round(v)) : ""}
-                </Text>
-                <View style={styles.barTrack}>
-                  <View style={[styles.bar, { height: `${(v / maxWeek) * 100}%`, backgroundColor: colors.primary }]} />
-                </View>
-                <Text style={styles.barLabel} numberOfLines={1}>{weekLabel(ref, i)}</Text>
-              </View>
-            ))}
+            {weeks.map((v, i) => {
+              const range = weekRange(ref, i);
+              if (!range) return <View key={i} style={styles.barCol} />;
+              const isPicked = pickedWeek === i;
+              const dimmed = pickedWeek !== null && !isPicked;
+              return (
+                <Pressable
+                  key={i}
+                  onPress={() => setPickedWeek(isPicked ? null : i)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isPicked }}
+                  accessibilityLabel={`${weekLabel(ref, i)}: ${money(Math.round(v))}. Show purchases.`}
+                  style={({ hovered }) => [styles.barCol, hovered && styles.barColHover]}
+                >
+                  <Text style={[styles.barValue, isPicked && styles.barValueActive]} numberOfLines={1}>
+                    {v > 0 ? money(Math.round(v)) : ""}
+                  </Text>
+                  <View style={styles.barTrack}>
+                    <View
+                      style={[
+                        styles.bar,
+                        {
+                          height: `${(v / maxWeek) * 100}%`,
+                          backgroundColor: colors.primary,
+                          opacity: dimmed ? 0.35 : 1,
+                        },
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.barLabel, isPicked && styles.barLabelActive]} numberOfLines={1}>
+                    {weekLabel(ref, i)}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
+          {pickedWeek === null ? (
+            <Text style={styles.barHint}>Tap a bar to see that week's purchases</Text>
+          ) : null}
         </Card>
+
+        {/* Purchases inside the selected week */}
+        {pickedWeek !== null ? (
+          <>
+            <SectionTitle right={money(Math.round(weeks[pickedWeek]))}>
+              {weekLabel(ref, pickedWeek)}
+            </SectionTitle>
+            <Card style={{ paddingVertical: spacing.xs }}>
+              <View style={styles.weekHead}>
+                <Text style={styles.weekCount}>
+                  {weekTxns.length === 0
+                    ? "No purchases this week"
+                    : `${weekTxns.length} purchase${weekTxns.length === 1 ? "" : "s"}`}
+                </Text>
+                <Pressable onPress={() => setPickedWeek(null)} hitSlop={8} style={styles.weekClose}>
+                  <Ionicons name="close" size={16} color={colors.textMuted} />
+                  <Text style={styles.weekCloseText}>Close</Text>
+                </Pressable>
+              </View>
+              {weekTxns.map((t, i) => (
+                <View key={t.id} style={[styles.weekRow, i < weekTxns.length - 1 && styles.weekDivider]}>
+                  <Avatar icon={categoryIcon(t.category)} color={categoryColor(t.category)} label={t.category} />
+                  <View style={styles.weekMid}>
+                    <Text style={styles.weekMerchant} numberOfLines={1}>{t.merchant}</Text>
+                    <Text style={styles.weekSub} numberOfLines={1}>
+                      {t.category} · {shortDate(t.date)}
+                    </Text>
+                  </View>
+                  <Text style={styles.weekAmount}>{money(t.amount)}</Text>
+                </View>
+              ))}
+            </Card>
+          </>
+        ) : null}
 
         {/* Headline numbers */}
         {stats ? (
@@ -376,11 +442,30 @@ const makeStyles = (colors) =>
     drillHint: { color: colors.textMuted, fontSize: 12.5, flex: 1 },
 
     barChart: { flexDirection: "row", alignItems: "flex-end", height: 190, justifyContent: "space-between" },
-    barCol: { flex: 1, alignItems: "center" },
+    barCol: { flex: 1, alignItems: "center", cursor: "pointer", paddingTop: 2 },
     barTrack: { width: 26, height: 130, justifyContent: "flex-end", borderRadius: radius.sm },
     bar: { width: "100%", borderRadius: radius.sm, minHeight: 4 },
     barValue: { color: colors.textMuted, fontSize: 9.5, fontWeight: "600", marginBottom: 4, height: 14 },
-    barLabel: { color: colors.textFaint, fontSize: 10, marginTop: 6 },
+    barLabel: { color: colors.textFaint, fontSize: 10.5, marginTop: 6 },
+    barLabelActive: { color: colors.primary, fontWeight: "700" },
+    barValueActive: { color: colors.text, fontWeight: "700" },
+    barColHover: { backgroundColor: colors.surfaceAlt, borderRadius: radius.sm },
+    barHint: { color: colors.textFaint, fontSize: 11.5, textAlign: "center", marginTop: spacing.md },
+    weekHead: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: spacing.sm,
+    },
+    weekCount: { color: colors.textMuted, fontSize: 12.5, fontWeight: "600" },
+    weekClose: { flexDirection: "row", alignItems: "center", gap: 3, cursor: "pointer" },
+    weekCloseText: { color: colors.textMuted, fontSize: 12.5, fontWeight: "600" },
+    weekRow: { flexDirection: "row", alignItems: "center", paddingVertical: spacing.md },
+    weekDivider: { borderBottomWidth: 1, borderBottomColor: colors.border },
+    weekMid: { flex: 1, marginLeft: spacing.md },
+    weekMerchant: { color: colors.text, fontSize: 15, fontWeight: "600" },
+    weekSub: { color: colors.textFaint, fontSize: 12, marginTop: 2 },
+    weekAmount: { color: colors.text, fontSize: 15, fontWeight: "700" },
 
     statGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
     statCard: { flexGrow: 1, flexBasis: 150, minWidth: 150 },
