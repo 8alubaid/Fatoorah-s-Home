@@ -13,6 +13,7 @@ import { BankProvider } from "../src/bank/BankContext";
 import { ThemeProvider, useTheme } from "../src/ThemeContext";
 import { darkColors, lightColors } from "../src/theme";
 import { AuthProvider, useAuth } from "../src/auth/AuthContext";
+import { BudgetProvider } from "../src/settings/BudgetContext";
 
 function InnerLayout() {
   const { colors, isDark } = useTheme();
@@ -69,9 +70,11 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ThemeProvider>
         <AuthProvider>
-          <BankProvider>
-            <InnerLayout />
-          </BankProvider>
+          <BudgetProvider>
+            <BankProvider>
+              <InnerLayout />
+            </BankProvider>
+          </BudgetProvider>
         </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>

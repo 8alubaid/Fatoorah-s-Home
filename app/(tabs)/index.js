@@ -1,9 +1,9 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Platform } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Platform, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { spacing, radius, categoryColor, categoryIcon, CONTENT_MAX } from "../../src/theme";
+import { spacing, radius, categoryColor, categoryIcon, CONTENT_MAX, CURRENCY } from "../../src/theme";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
 import { Card, ScreenHeader, SectionTitle, ProgressBar, Avatar, EmptyState, ScreenLoading } from "../../src/components/ui";
 
@@ -18,13 +18,17 @@ import {
 import { money, shortDate, monthLabel, timeAgo, TODAY } from "../../src/utils";
 import { useBank } from "../../src/bank/BankContext";
 import { useBottomSpace } from "../../src/useLayout";
+import { useBudget } from "../../src/settings/BudgetContext";
 
-const MONTHLY_BUDGET = 4000;
 
 export default function Dashboard() {
   const { colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const bottomSpace = useBottomSpace();
+  const { budget, setBudget, saving } = useBudget();
+  const [editingBudget, setEditingBudget] = useState(false);
+  const [budgetDraft, setBudgetDraft] = useState("");
+  const [budgetError, setBudgetError] = useState("");
   const { connected, transactions, accounts, disconnect, restoring, refreshing, lastSynced, refresh } = useBank();
 
   if (restoring) {
@@ -65,9 +69,24 @@ export default function Dashboard() {
     (cats[0]
       ? `${cats[0].category} is your biggest category at ${money(cats[0].amount)}. `
       : "") +
-    (month <= MONTHLY_BUDGET
-      ? `You are ${money(MONTHLY_BUDGET - month)} under your ${money(MONTHLY_BUDGET)} monthly budget.`
-      : `You are ${money(month - MONTHLY_BUDGET)} over your monthly budget.`);
+    (month <= budget
+      ? `You are ${money(budget - month)} under your ${money(budget)} monthly budget.`
+      : `You are ${money(month - budget)} over your monthly budget.`);
+
+  const startEditBudget = () => {
+    setBudgetDraft(String(budget));
+    setBudgetError("");
+    setEditingBudget(true);
+  };
+  const cancelBudget = () => {
+    setEditingBudget(false);
+    setBudgetError("");
+  };
+  const saveBudget = async () => {
+    const { error } = await setBudget(budgetDraft);
+    if (error) return setBudgetError(error.message || "Couldn't save your budget.");
+    setEditingBudget(false);
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -153,18 +172,58 @@ export default function Dashboard() {
         </Card>
 
         {/* Budget progress */}
-        <SectionTitle right={`${Math.round((month / MONTHLY_BUDGET) * 100)}%`}>
+        <SectionTitle right={`${Math.round((month / budget) * 100)}%`}>
           Budget progress
         </SectionTitle>
         <Card>
-          <View style={styles.budgetRow}>
-            <Text style={styles.budgetSpent}>{money(month)}</Text>
-            <Text style={styles.budgetMax}>of {money(MONTHLY_BUDGET)}</Text>
-          </View>
+          {editingBudget ? (
+            <View style={styles.budgetEdit}>
+              <Text style={styles.budgetEditLabel}>Monthly budget</Text>
+              <View style={styles.budgetInputRow}>
+                <Text style={styles.budgetCurrency}>{CURRENCY}</Text>
+                <TextInput
+                  value={budgetDraft}
+                  onChangeText={(t) => {
+                    setBudgetDraft(t.replace(/[^0-9]/g, ""));
+                    setBudgetError("");
+                  }}
+                  keyboardType="number-pad"
+                  inputMode="numeric"
+                  placeholder="4000"
+                  placeholderTextColor={colors.textFaint}
+                  autoFocus
+                  onSubmitEditing={saveBudget}
+                  style={styles.budgetInput}
+                />
+              </View>
+              {budgetError ? <Text style={styles.budgetError}>{budgetError}</Text> : null}
+              <View style={styles.budgetActions}>
+                <Pressable onPress={cancelBudget} style={styles.budgetBtn}>
+                  <Text style={styles.budgetBtnText}>Cancel</Text>
+                </Pressable>
+                <Pressable onPress={saveBudget} disabled={saving} style={[styles.budgetBtn, styles.budgetBtnPrimary]}>
+                  <Text style={styles.budgetBtnPrimaryText}>{saving ? "Saving…" : "Save"}</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : (
+            <Pressable
+              onPress={startEditBudget}
+              accessibilityLabel={`Monthly budget ${money(budget)}. Tap to change.`}
+              style={({ hovered }) => [styles.budgetRow, hovered && styles.budgetRowHover]}
+            >
+              <Text style={styles.budgetSpent}>{money(month)}</Text>
+              <Text style={styles.budgetMax}>of {money(budget)}</Text>
+              <View style={styles.budgetEditHint}>
+                <Ionicons name="pencil" size={13} color={colors.primary} />
+                <Text style={styles.budgetEditHintText}>Edit</Text>
+              </View>
+            </Pressable>
+          )}
           <ProgressBar
             value={month}
-            max={MONTHLY_BUDGET}
-            color={month > MONTHLY_BUDGET ? colors.danger : colors.success}
+            max={budget}
+            color={month > budget ? colors.danger : colors.success}
           />
           {topThree.map((c) => (
             <View key={c.category} style={styles.catLine}>
@@ -230,7 +289,40 @@ const makeStyles = (colors) =>
     acctActionDivider: { width: 1, height: 20, backgroundColor: colors.border },
     aiCard: { backgroundColor: colors.primarySoft, borderColor: colors.primary + "55" },
     aiText: { color: colors.text, fontSize: 15, lineHeight: 22 },
-    budgetRow: { flexDirection: "row", alignItems: "flex-end", marginBottom: spacing.md },
+    budgetRow: {
+      flexDirection: "row",
+      alignItems: "flex-end",
+      marginBottom: spacing.md,
+      marginHorizontal: -spacing.sm,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 4,
+      borderRadius: radius.sm,
+      cursor: "pointer",
+    },
+    budgetRowHover: { backgroundColor: colors.surfaceAlt },
+    budgetEditHint: { flexDirection: "row", alignItems: "center", gap: 4, marginLeft: "auto", marginBottom: 3 },
+    budgetEditHintText: { color: colors.primary, fontSize: 13, fontWeight: "700" },
+    budgetEdit: { marginBottom: spacing.md },
+    budgetEditLabel: { color: colors.textMuted, fontSize: 13, fontWeight: "600", marginBottom: 6 },
+    budgetInputRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+      backgroundColor: colors.surfaceAlt,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      height: 48,
+    },
+    budgetCurrency: { color: colors.textMuted, fontSize: 15, fontWeight: "700" },
+    budgetInput: { flex: 1, color: colors.text, fontSize: 18, fontWeight: "700", height: "100%", outlineStyle: "none" },
+    budgetError: { color: colors.danger, fontSize: 12.5, marginTop: 6 },
+    budgetActions: { flexDirection: "row", justifyContent: "flex-end", gap: spacing.sm, marginTop: spacing.md },
+    budgetBtn: { paddingVertical: 9, paddingHorizontal: spacing.lg, borderRadius: radius.md, cursor: "pointer" },
+    budgetBtnText: { color: colors.textMuted, fontSize: 14, fontWeight: "700" },
+    budgetBtnPrimary: { backgroundColor: colors.primary },
+    budgetBtnPrimaryText: { color: colors.onPrimary, fontSize: 14, fontWeight: "700" },
     budgetSpent: { color: colors.text, fontSize: 22, fontWeight: "800" },
     budgetMax: { color: colors.textMuted, fontSize: 14, marginLeft: 6, marginBottom: 2 },
     catLine: { flexDirection: "row", alignItems: "center", marginTop: spacing.md },
