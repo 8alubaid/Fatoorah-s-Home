@@ -1,18 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { AccessibilityInfo, Easing } from "react-native";
 import { Tabs } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme } from "../../src/ThemeContext";
 import WebSidebar from "../../src/components/WebSidebar";
-import { SIDEBAR_WIDTH, FONT_SANS } from "../../src/theme";
+import FloatingTabBar from "../../src/components/FloatingTabBar";
+import { SIDEBAR_WIDTH } from "../../src/theme";
 import { useShowSidebar } from "../../src/useLayout";
 
-const icon = (name) => ({ color, size }) => <Ionicons name={name} size={size - 1} color={color} />;
-
 export default function TabsLayout() {
-  const { colors } = useTheme();
-  const insets = useSafeAreaInsets();
   const showSidebar = useShowSidebar();
   const [reduceMotion, setReduceMotion] = useState(false);
 
@@ -24,9 +18,10 @@ export default function TabsLayout() {
 
   return (
     <Tabs
-      // Web: a fixed left sidebar replaces the bottom tab bar; content is inset
-      // past it. Native: the floating pill below.
-      tabBar={showSidebar ? (props) => <WebSidebar {...props} /> : undefined}
+      // Wide web gets the sidebar; everything else gets the floating pill. Both
+      // are custom so the active highlight can be a real animated pill rather
+      // than React Navigation's flat per-item background colour.
+      tabBar={(props) => (showSidebar ? <WebSidebar {...props} /> : <FloatingTabBar {...props} />)}
       sceneContainerStyle={showSidebar ? { paddingLeft: SIDEBAR_WIDTH } : undefined}
       screenOptions={{
         headerShown: false,
@@ -39,39 +34,13 @@ export default function TabsLayout() {
             easing: Easing.out(Easing.cubic),
           },
         },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textFaint,
-        tabBarActiveBackgroundColor: colors.tabBarActiveBg,
-        // Floating, translucent, rounded "pill" that levitates above the content.
-        tabBarStyle: {
-          position: "absolute",
-          left: 18,
-          right: 18,
-          bottom: Math.max(insets.bottom, 8) + 4,
-          height: 62,
-          borderRadius: 31,
-          backgroundColor: colors.tabBar,
-          borderWidth: 1,
-          borderColor: colors.border,
-          paddingHorizontal: 8,
-          elevation: 16,
-          shadowColor: "#000",
-          shadowOpacity: 0.3,
-          shadowRadius: 16,
-          shadowOffset: { width: 0, height: 8 },
-        },
-        tabBarItemStyle: { height: 46, marginVertical: 8, marginHorizontal: 1, borderRadius: 22 },
-        // React Navigation sets an inline system font on these labels, which the
-        // global CSS deliberately cannot override (that same rule protects icon
-        // fonts), so name the family here.
-        tabBarLabelStyle: { fontSize: 9.5, fontWeight: "600", fontFamily: FONT_SANS },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: "Dashboard", tabBarIcon: icon("home") }} />
-      <Tabs.Screen name="receipts" options={{ title: "Receipts", tabBarIcon: icon("receipt") }} />
-      <Tabs.Screen name="insights" options={{ title: "Insights", tabBarIcon: icon("bar-chart") }} />
-      <Tabs.Screen name="reminders" options={{ title: "Reminders", tabBarIcon: icon("alarm") }} />
-      <Tabs.Screen name="profile" options={{ title: "Profile", tabBarIcon: icon("person") }} />
+      <Tabs.Screen name="index" options={{ title: "Dashboard" }} />
+      <Tabs.Screen name="receipts" options={{ title: "Receipts" }} />
+      <Tabs.Screen name="insights" options={{ title: "Insights" }} />
+      <Tabs.Screen name="reminders" options={{ title: "Reminders" }} />
+      <Tabs.Screen name="profile" options={{ title: "Profile" }} />
     </Tabs>
   );
 }
