@@ -78,7 +78,10 @@ export default function DonutChart({
                   // responds just within its own arc. `fill="none"` keeps the
                   // hollow centre from swallowing presses.
                   onPress={onSelect ? () => onSelect(s.key) : undefined}
-                  accessibilityRole={onSelect ? "button" : undefined}
+                  // NOTE: do NOT set accessibilityRole here. react-native-svg
+                  // renders the element as that role's HTML tag, so "button"
+                  // swaps <circle> for <button> and the slice disappears —
+                  // it keeps the SVG attributes but draws nothing.
                   accessibilityLabel={onSelect ? `${s.label}: ${Math.round((s.amount / total) * 100)}%` : undefined}
                   style={onSelect && Platform.OS === "web" ? webPointer : undefined}
                 />
