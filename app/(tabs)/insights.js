@@ -3,17 +3,27 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Platform } from "react-n
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { spacing, radius, categoryColor, CONTENT_MAX } from "../../src/theme";
+import { spacing, radius, categoryColor, categoryIcon, paletteColor, CONTENT_MAX } from "../../src/theme";
 
 const isWeb = Platform.OS === "web";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
 import { Card, ScreenHeader, SectionTitle, EmptyState, ScreenLoading } from "../../src/components/ui";
-import { categoryTotals, totalForMonth, dailyTotals, latestTxDate } from "../../src/data";
-import { money, monthLabel, TODAY } from "../../src/utils";
+import DonutChart from "../../src/components/DonutChart";
+import {
+  categoryTotals,
+  totalForMonth,
+  dailyTotals,
+  latestTxDate,
+  merchantTotals,
+  topWithOther,
+  monthStats,
+} from "../../src/data";
+import { money, monthLabel, shortDate, TODAY } from "../../src/utils";
 import { useBank } from "../../src/bank/BankContext";
 import { useBottomSpace } from "../../src/useLayout";
 
 const MAX_MONTHS_BACK = 3;
+const MAX_MERCHANT_SLICES = 6;
 
 // Weekly buckets (W1..W5) from this month's daily totals — keeps bars readable.
 function weeklyBuckets(daily) {
@@ -35,12 +45,15 @@ function weekLabel(ref, index) {
   return `${m}/${start}–${end}`;
 }
 
+const pct = (part, whole) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
+
 export default function Insights() {
   const { colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const bottomSpace = useBottomSpace();
   const { connected, transactions, restoring } = useBank();
   const [monthsBack, setMonthsBack] = useState(0);
+  const [pickedCat, setPickedCat] = useState(null);
 
   if (restoring) {
     return (
@@ -77,13 +90,37 @@ export default function Insights() {
   const daily = dailyTotals(transactions, ref);
   const weeks = weeklyBuckets(daily);
   const maxWeek = Math.max(...weeks, 1);
+  const stats = monthStats(transactions, ref);
 
   const diff = month - lastMonth;
   const trendUp = diff >= 0;
-  const pctChange = lastMonth > 0 ? Math.round((diff / lastMonth) * 100) : 0;
+  const pctChange = pct(diff, lastMonth);
 
   const canGoBack = monthsBack < MAX_MONTHS_BACK;
   const canGoForward = monthsBack > 0;
+
+  // The picked category may not exist in the month being viewed — fall back to
+  // the biggest one so the drill-down always shows something meaningful.
+  const activeCat =
+    pickedCat && cats.some((c) => c.category === pickedCat) ? pickedCat : cats[0]?.category ?? null;
+  const activeCatTotal = cats.find((c) => c.category === activeCat)?.amount ?? 0;
+
+  const catSlices = cats.map((c) => ({
+    key: c.category,
+    label: c.category,
+    amount: c.amount,
+    color: categoryColor(c.category),
+  }));
+
+  const merchants = activeCat
+    ? topWithOther(merchantTotals(transactions, ref, activeCat), MAX_MERCHANT_SLICES)
+    : [];
+  const merchantSlices = merchants.map((m, i) => ({
+    key: m.merchant,
+    label: m.merchant,
+    amount: m.amount,
+    color: paletteColor(i),
+  }));
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -124,6 +161,84 @@ export default function Insights() {
           </Text>
         </Card>
 
+        {/* Category donut — tap a row to drill into it below */}
+        <SectionTitle>Where your money went</SectionTitle>
+        <Card>
+          {cats.length === 0 ? (
+            <Text style={styles.emptyNote}>No spending in {monthLabel(ref)}.</Text>
+          ) : (
+            <View style={styles.chartRow}>
+              <DonutChart
+                data={catSlices}
+                selectedKey={activeCat}
+                centerValue={money(month)}
+                centerLabel={`${cats.length} categories`}
+              />
+              <View style={styles.legend}>
+                {cats.map((c) => {
+                  const isActive = c.category === activeCat;
+                  return (
+                    <Pressable
+                      key={c.category}
+                      onPress={() => setPickedCat(c.category)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: isActive }}
+                      style={({ hovered }) => [
+                        styles.legendRow,
+                        hovered && styles.legendRowHover,
+                        isActive && styles.legendRowActive,
+                      ]}
+                    >
+                      <View style={[styles.legendDot, { backgroundColor: categoryColor(c.category) }]} />
+                      <Text style={[styles.legendName, isActive && styles.legendNameActive]} numberOfLines={1}>
+                        {c.category}
+                      </Text>
+                      <Text style={styles.legendPct}>{pct(c.amount, month)}%</Text>
+                      <Text style={styles.legendAmount}>{money(c.amount)}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+        </Card>
+
+        {/* Drill-down: what makes up the selected category */}
+        {activeCat && merchantSlices.length > 0 ? (
+          <>
+            <SectionTitle right={`${pct(activeCatTotal, month)}% of spending`}>
+              Inside {activeCat}
+            </SectionTitle>
+            <Card>
+              <View style={styles.drillHead}>
+                <Ionicons name={categoryIcon(activeCat)} size={16} color={categoryColor(activeCat)} />
+                <Text style={styles.drillHint}>
+                  {merchants.length === 1
+                    ? `One place accounted for your ${activeCat.toLowerCase()} spending.`
+                    : `${merchants.length} places · tap another category above to switch`}
+                </Text>
+              </View>
+              <View style={styles.chartRow}>
+                <DonutChart
+                  data={merchantSlices}
+                  centerValue={money(activeCatTotal)}
+                  centerLabel={activeCat}
+                />
+                <View style={styles.legend}>
+                  {merchants.map((m, i) => (
+                    <View key={m.merchant} style={styles.legendRow}>
+                      <View style={[styles.legendDot, { backgroundColor: paletteColor(i) }]} />
+                      <Text style={styles.legendName} numberOfLines={1}>{m.merchant}</Text>
+                      <Text style={styles.legendPct}>{pct(m.amount, activeCatTotal)}%</Text>
+                      <Text style={styles.legendAmount}>{money(m.amount)}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </Card>
+          </>
+        ) : null}
+
         {/* Weekly bar chart */}
         <SectionTitle>Spending by week</SectionTitle>
         <Card>
@@ -142,38 +257,36 @@ export default function Insights() {
           </View>
         </Card>
 
-        {/* Category breakdown — one stacked bar, colored per category */}
-        <SectionTitle>Category breakdown</SectionTitle>
-        <Card>
-          {cats.length === 0 ? (
-            <Text style={styles.emptyNote}>No spending in {monthLabel(ref)}.</Text>
-          ) : (
-            <>
-              <View style={styles.stackTrack}>
-                {cats.map((c) => (
-                  <View
-                    key={c.category}
-                    style={{ width: `${(c.amount / month) * 100}%`, backgroundColor: categoryColor(c.category) }}
-                  />
-                ))}
-              </View>
-              {cats.map((c) => {
-                const pct = Math.round((c.amount / month) * 100);
-                return (
-                  <View key={c.category} style={styles.catRow}>
-                    <View style={[styles.catDot, { backgroundColor: categoryColor(c.category) }]} />
-                    <Text style={styles.catName}>
-                      {c.category}
-                    </Text>
-                    <Text style={styles.catAmount}>
-                      {money(c.amount)} <Text style={styles.catPct}>· {pct}%</Text>
-                    </Text>
-                  </View>
-                );
-              })}
-            </>
-          )}
-        </Card>
+        {/* Headline numbers */}
+        {stats ? (
+          <>
+            <SectionTitle>At a glance</SectionTitle>
+            <View style={styles.statGrid}>
+              <Card style={styles.statCard}>
+                <Text style={styles.statValue}>{stats.count}</Text>
+                <Text style={styles.statLabel}>Transactions</Text>
+              </Card>
+              <Card style={styles.statCard}>
+                <Text style={styles.statValue}>{money(Math.round(stats.perActiveDay))}</Text>
+                <Text style={styles.statLabel}>Per spending day</Text>
+              </Card>
+              <Card style={styles.statCard}>
+                <Text style={styles.statValue} numberOfLines={1}>{money(stats.biggest.amount)}</Text>
+                <Text style={styles.statLabel} numberOfLines={1}>
+                  Biggest · {stats.biggest.merchant}
+                </Text>
+                <Text style={styles.statSub}>{shortDate(stats.biggest.date)}</Text>
+              </Card>
+              <Card style={styles.statCard}>
+                <Text style={styles.statValue} numberOfLines={1}>{money(stats.topMerchant.amount)}</Text>
+                <Text style={styles.statLabel} numberOfLines={1}>
+                  Most spent · {stats.topMerchant.merchant}
+                </Text>
+                <Text style={styles.statSub}>{pct(stats.topMerchant.amount, month)}% of the month</Text>
+              </Card>
+            </View>
+          </>
+        ) : null}
 
         <View style={{ height: spacing.xl }} />
       </ScrollView>
@@ -209,25 +322,47 @@ const makeStyles = (colors) =>
     },
     trendPct: { fontSize: 14, fontWeight: "700", marginLeft: 4 },
     trendNote: { color: colors.textMuted, fontSize: 13, marginTop: spacing.sm },
+
+    // Donut + legend sit side by side when there's room, stack when narrow.
+    chartRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      flexWrap: "wrap",
+      gap: spacing.lg,
+      justifyContent: "center",
+    },
+    legend: { flex: 1, minWidth: 210, gap: 2 },
+    legendRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 7,
+      paddingHorizontal: spacing.sm,
+      borderRadius: radius.sm,
+      gap: spacing.sm,
+    },
+    legendRowHover: { backgroundColor: colors.surfaceAlt },
+    legendRowActive: { backgroundColor: colors.primarySoft },
+    legendDot: { width: 10, height: 10, borderRadius: 5 },
+    legendName: { color: colors.textMuted, fontSize: 13.5, fontWeight: "600", flex: 1 },
+    legendNameActive: { color: colors.text, fontWeight: "700" },
+    legendPct: { color: colors.textFaint, fontSize: 12.5, fontWeight: "600", width: 42, textAlign: "right" },
+    legendAmount: { color: colors.text, fontSize: 13.5, fontWeight: "700", minWidth: 74, textAlign: "right" },
+
+    drillHead: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: spacing.md },
+    drillHint: { color: colors.textMuted, fontSize: 12.5, flex: 1 },
+
     barChart: { flexDirection: "row", alignItems: "flex-end", height: 190, justifyContent: "space-between" },
     barCol: { flex: 1, alignItems: "center" },
     barTrack: { width: 26, height: 130, justifyContent: "flex-end", borderRadius: radius.sm },
     bar: { width: "100%", borderRadius: radius.sm, minHeight: 4 },
     barValue: { color: colors.textMuted, fontSize: 9.5, fontWeight: "600", marginBottom: 4, height: 14 },
     barLabel: { color: colors.textFaint, fontSize: 10, marginTop: 6 },
-    // Single stacked bar segmented by category color.
-    stackTrack: {
-      flexDirection: "row",
-      height: 12,
-      borderRadius: radius.pill,
-      overflow: "hidden",
-      backgroundColor: colors.surfaceAlt,
-      marginBottom: spacing.md,
-    },
-    catRow: { flexDirection: "row", alignItems: "center", paddingVertical: spacing.sm },
-    catDot: { width: 10, height: 10, borderRadius: 5, marginRight: spacing.sm },
-    catName: { color: colors.text, fontSize: 14, fontWeight: "600", flex: 1 },
-    catAmount: { color: colors.text, fontSize: 14, fontWeight: "700" },
-    catPct: { color: colors.textFaint, fontWeight: "500" },
+
+    statGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+    statCard: { flexGrow: 1, flexBasis: 150, minWidth: 150 },
+    statValue: { color: colors.text, fontSize: 20, fontWeight: "800", letterSpacing: -0.3 },
+    statLabel: { color: colors.textMuted, fontSize: 12.5, marginTop: 3 },
+    statSub: { color: colors.textFaint, fontSize: 11, marginTop: 2 },
+
     emptyNote: { color: colors.textMuted, fontSize: 14, textAlign: "center", paddingVertical: spacing.md },
   });

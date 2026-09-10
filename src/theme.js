@@ -74,6 +74,20 @@ export const categoryMeta = {
   Other: { color: "#64748B", icon: "cube-outline", emoji: "📦" },
 };
 
+// Qualitative palette for charts that are not category-based (e.g. the
+// merchant drill-down). Ordered so neighbouring slices stay distinguishable.
+export const CHART_PALETTE = [
+  "#2E8B65",
+  "#7A6DB0",
+  "#3979A8",
+  "#B57A21",
+  "#A85E7F",
+  "#307F8B",
+  "#B85863",
+  "#64748B",
+];
+export const paletteColor = (i) => CHART_PALETTE[i % CHART_PALETTE.length];
+
 export const categoryColor = (category) =>
   (categoryMeta[category] && categoryMeta[category].color) || categoryMeta.Other.color;
 export const categoryIcon = (category) =>

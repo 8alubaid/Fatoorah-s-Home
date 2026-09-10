@@ -21,6 +21,47 @@ const sameMonth = (iso, ref) => {
   return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
 };
 
+// Spend per merchant inside one category for a given month, biggest first.
+// Powers the "where does my Food money actually go?" drill-down.
+export const merchantTotals = (txns, ref, category) => {
+  const map = {};
+  (txns || [])
+    .filter((t) => sameMonth(t.date, ref) && (!category || t.category === category))
+    .forEach((t) => {
+      const name = t.merchant || "Unknown";
+      map[name] = (map[name] || 0) + t.amount;
+    });
+  return Object.entries(map)
+    .map(([merchant, amount]) => ({ merchant, amount }))
+    .sort((a, b) => b.amount - a.amount);
+};
+
+// Collapse a long tail into "Other" so a chart stays readable.
+export const topWithOther = (rows, limit, key = "merchant") => {
+  if (rows.length <= limit) return rows;
+  const top = rows.slice(0, limit);
+  const rest = rows.slice(limit).reduce((sum, r) => sum + r.amount, 0);
+  return rest > 0 ? [...top, { [key]: `Other (${rows.length - limit})`, amount: rest }] : top;
+};
+
+// A few headline facts that are cheap to compute and genuinely useful.
+export const monthStats = (txns, ref) => {
+  const rows = (txns || []).filter((t) => sameMonth(t.date, ref));
+  if (!rows.length) return null;
+  const total = rows.reduce((s, t) => s + t.amount, 0);
+  const biggest = rows.reduce((a, b) => (b.amount > a.amount ? b : a), rows[0]);
+  const days = new Set(rows.map((t) => t.date)).size;
+  const merchants = merchantTotals(txns, ref, null);
+  return {
+    count: rows.length,
+    total,
+    biggest,
+    activeDays: days,
+    perActiveDay: total / days,
+    topMerchant: merchants[0] || null,
+  };
+};
+
 // ---- Recurring payment / subscription detection ----
 //
 // Reminders are derived from real spending: we look for the same merchant
