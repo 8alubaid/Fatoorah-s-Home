@@ -4,10 +4,13 @@
 // arc paths — same result, far less trigonometry, and the rounded line caps
 // come for free.
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Platform } from "react-native";
 import Svg, { Circle, G } from "react-native-svg";
 import { useTheme, useThemedStyles } from "../ThemeContext";
 import { spacing } from "../theme";
+
+// Hoisted so the style object identity stays stable between renders.
+const webPointer = { cursor: "pointer" };
 
 export default function DonutChart({
   data = [],
@@ -16,6 +19,7 @@ export default function DonutChart({
   centerLabel,
   centerValue,
   selectedKey = null,
+  onSelect,
   emptyLabel = "No data",
 }) {
   const { colors } = useTheme();
@@ -70,6 +74,13 @@ export default function DonutChart({
                   opacity={dimmed ? 0.28 : 1}
                   strokeDasharray={`${s.length} ${circumference - s.length}`}
                   strokeDashoffset={-s.offset}
+                  // Only the painted dash segment is hit-tested, so each slice
+                  // responds just within its own arc. `fill="none"` keeps the
+                  // hollow centre from swallowing presses.
+                  onPress={onSelect ? () => onSelect(s.key) : undefined}
+                  accessibilityRole={onSelect ? "button" : undefined}
+                  accessibilityLabel={onSelect ? `${s.label}: ${Math.round((s.amount / total) * 100)}%` : undefined}
+                  style={onSelect && Platform.OS === "web" ? webPointer : undefined}
                 />
               );
             })}

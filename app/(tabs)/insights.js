@@ -54,6 +54,7 @@ export default function Insights() {
   const { connected, transactions, restoring } = useBank();
   const [monthsBack, setMonthsBack] = useState(0);
   const [pickedCat, setPickedCat] = useState(null);
+  const [pickedMerchant, setPickedMerchant] = useState(null);
 
   if (restoring) {
     return (
@@ -115,6 +116,11 @@ export default function Insights() {
   const merchants = activeCat
     ? topWithOther(merchantTotals(transactions, ref, activeCat), MAX_MERCHANT_SLICES)
     : [];
+  // Clears itself when the category changes and the merchant is no longer present.
+  const activeMerchant =
+    pickedMerchant && merchants.some((m) => m.merchant === pickedMerchant) ? pickedMerchant : null;
+  const toggleMerchant = (key) => setPickedMerchant((prev) => (prev === key ? null : key));
+
   const merchantSlices = merchants.map((m, i) => ({
     key: m.merchant,
     label: m.merchant,
@@ -171,6 +177,7 @@ export default function Insights() {
               <DonutChart
                 data={catSlices}
                 selectedKey={activeCat}
+                onSelect={setPickedCat}
                 centerValue={money(month)}
                 centerLabel={`${cats.length} categories`}
               />
@@ -221,18 +228,35 @@ export default function Insights() {
               <View style={styles.chartRow}>
                 <DonutChart
                   data={merchantSlices}
-                  centerValue={money(activeCatTotal)}
-                  centerLabel={activeCat}
+                  selectedKey={activeMerchant}
+                  onSelect={toggleMerchant}
+                  centerValue={money(activeMerchant ? merchants.find((m) => m.merchant === activeMerchant).amount : activeCatTotal)}
+                  centerLabel={activeMerchant || activeCat}
                 />
                 <View style={styles.legend}>
-                  {merchants.map((m, i) => (
-                    <View key={m.merchant} style={styles.legendRow}>
-                      <View style={[styles.legendDot, { backgroundColor: paletteColor(i) }]} />
-                      <Text style={styles.legendName} numberOfLines={1}>{m.merchant}</Text>
-                      <Text style={styles.legendPct}>{pct(m.amount, activeCatTotal)}%</Text>
-                      <Text style={styles.legendAmount}>{money(m.amount)}</Text>
-                    </View>
-                  ))}
+                  {merchants.map((m, i) => {
+                    const isActive = m.merchant === activeMerchant;
+                    return (
+                      <Pressable
+                        key={m.merchant}
+                        onPress={() => toggleMerchant(m.merchant)}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: isActive }}
+                        style={({ hovered }) => [
+                          styles.legendRow,
+                          hovered && styles.legendRowHover,
+                          isActive && styles.legendRowActive,
+                        ]}
+                      >
+                        <View style={[styles.legendDot, { backgroundColor: paletteColor(i) }]} />
+                        <Text style={[styles.legendName, isActive && styles.legendNameActive]} numberOfLines={1}>
+                          {m.merchant}
+                        </Text>
+                        <Text style={styles.legendPct}>{pct(m.amount, activeCatTotal)}%</Text>
+                        <Text style={styles.legendAmount}>{money(m.amount)}</Text>
+                      </Pressable>
+                    );
+                  })}
                 </View>
               </View>
             </Card>
