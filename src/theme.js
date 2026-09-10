@@ -1,4 +1,13 @@
 // Semantic design tokens shared by the native and web experiences.
+import { Platform } from "react-native";
+
+// Web loads Inter as a webfont (see app/_layout.js + app/globals.css). Native
+// has no Inter bundled, so it stays on the platform font — `undefined` simply
+// means "use the default", which is what we want there.
+export const FONT_SANS =
+  Platform.OS === "web"
+    ? '"Inter", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    : undefined;
 export const darkColors = {
   bg: "#0B1110",
   surface: "#111A18",

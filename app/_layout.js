@@ -51,6 +51,30 @@ function InnerLayout() {
     meta("theme-color", isDark ? darkColors.bg : lightColors.bg);
   }, [isDark]);
 
+  // Load the Inter webfont. globals.css asks for "Inter" but nothing fetched it,
+  // so it silently fell back to the system stack. Injected here (rather than in
+  // +html.js, which is inert under SPA output) and guarded so it only runs once.
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof document === "undefined") return;
+    if (document.getElementById("inter-font")) return;
+    const preconnect = (href, crossOrigin) => {
+      const l = document.createElement("link");
+      l.rel = "preconnect";
+      l.href = href;
+      if (crossOrigin) l.crossOrigin = "anonymous";
+      document.head.appendChild(l);
+    };
+    preconnect("https://fonts.googleapis.com");
+    preconnect("https://fonts.gstatic.com", true);
+    const link = document.createElement("link");
+    link.id = "inter-font";
+    link.rel = "stylesheet";
+    // Only the weights the UI actually uses; display=swap avoids invisible text.
+    link.href =
+      "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap";
+    document.head.appendChild(link);
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.bg }}>
       <StatusBar style={isDark ? "light" : "dark"} />

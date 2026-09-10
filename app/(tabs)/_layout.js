@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../src/ThemeContext";
 import WebSidebar from "../../src/components/WebSidebar";
-import { SIDEBAR_WIDTH } from "../../src/theme";
+import { SIDEBAR_WIDTH, FONT_SANS } from "../../src/theme";
 import { useShowSidebar } from "../../src/useLayout";
 
 const icon = (name) => ({ color, size }) => <Ionicons name={name} size={size - 1} color={color} />;
@@ -61,7 +61,10 @@ export default function TabsLayout() {
           shadowOffset: { width: 0, height: 8 },
         },
         tabBarItemStyle: { height: 46, marginVertical: 8, marginHorizontal: 1, borderRadius: 22 },
-        tabBarLabelStyle: { fontSize: 9.5, fontWeight: "600" },
+        // React Navigation sets an inline system font on these labels, which the
+        // global CSS deliberately cannot override (that same rule protects icon
+        // fonts), so name the family here.
+        tabBarLabelStyle: { fontSize: 9.5, fontWeight: "600", fontFamily: FONT_SANS },
       }}
     >
       <Tabs.Screen name="index" options={{ title: "Dashboard", tabBarIcon: icon("home") }} />
