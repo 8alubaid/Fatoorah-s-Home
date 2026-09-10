@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TextInput, FlatList, Platform } fro
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { spacing, radius, categoryColor, categoryEmoji, TAB_BAR_SPACE, CONTENT_MAX } from "../../src/theme";
+import { spacing, radius, categoryColor, categoryIcon, TAB_BAR_SPACE, CONTENT_MAX } from "../../src/theme";
 
 const isWeb = Platform.OS === "web";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
@@ -52,7 +52,7 @@ export default function Receipts() {
   if (restoring) {
     return (
       <SafeAreaView style={styles.safe} edges={["top"]}>
-        <ScreenHeader title="Receipts 🧾" />
+        <ScreenHeader title="Receipts" />
         <ScreenLoading label="Loading your receipts…" />
       </SafeAreaView>
     );
@@ -61,14 +61,14 @@ export default function Receipts() {
   if (!connected) {
     return (
       <SafeAreaView style={styles.safe} edges={["top"]}>
-        <ScreenHeader title="Receipts 🧾" />
+        <ScreenHeader title="Receipts" />
         <EmptyState
-          emoji="🧾"
+          icon="receipt-outline"
           title="No receipts yet"
           message="Upload a bank statement (PDF) and your transactions will appear here automatically — searchable and filterable by category and date."
           buttonLabel="Upload statement"
           onPress={() => router.push("/import")}
-          note="🔒 Automatic bank sync — coming soon"
+          note="Secure automatic bank sync is coming soon"
         />
       </SafeAreaView>
     );
@@ -77,7 +77,7 @@ export default function Receipts() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.webWrap}>
-      <ScreenHeader title="Receipts 🧾" subtitle={`${filtered.length} receipts · ${money(total)}`} />
+      <ScreenHeader title="Receipts" subtitle={`${filtered.length} records · ${money(total)} total`} />
 
       {/* Search */}
       <View style={styles.searchWrap}>
@@ -123,7 +123,7 @@ export default function Receipts() {
         ListEmptyComponent={<Text style={styles.emptyText}>No receipts match your filters.</Text>}
         renderItem={({ item }) => (
           <View style={styles.row}>
-            <Avatar emoji={categoryEmoji(item.category)} color={categoryColor(item.category)} />
+            <Avatar icon={categoryIcon(item.category)} color={categoryColor(item.category)} label={item.category} />
             <View style={styles.mid}>
               <Text style={styles.name}>{item.merchant}</Text>
               <Text style={styles.sub}>

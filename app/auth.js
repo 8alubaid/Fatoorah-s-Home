@@ -109,15 +109,15 @@ export default function Auth() {
               <Image source={isDark ? LOGO_DARK : LOGO_LIGHT} style={styles.logoImg} resizeMode="cover" />
             </View>
             <Text style={styles.brand}>Fatoorah</Text>
-            <Text style={styles.tagline}>Your receipts & spending, in one place.</Text>
+            <Text style={styles.tagline}>Receipts, spending, and budgets in one secure overview.</Text>
 
             {/* Card */}
             <Animated.View style={[styles.card, cardAnimStyle]}>
               <Text style={styles.title}>{isSignup ? "Create your account" : "Welcome back"}</Text>
               <Text style={styles.subtitle}>
                 {isSignup
-                  ? "Track your spending across all your accounts in one app."
-                  : "Sign in to pick up where you left off."}
+                  ? "Create a secure workspace for your financial records."
+                  : "Sign in to review your latest financial activity."}
               </Text>
 
               {/* Name — signup only */}
@@ -256,8 +256,8 @@ export default function Auth() {
                 (hovered || pressed) && styles.demoBtnHover,
               ]}
             >
-              <Ionicons name="sparkles-outline" size={18} color={colors.primary} />
-              <Text style={styles.demoText}>Explore the demo — no account needed</Text>
+              <Ionicons name="grid-outline" size={18} color={colors.primary} />
+              <Text style={styles.demoText}>View the product demo</Text>
             </Pressable>
           </View>
         </ScrollView>

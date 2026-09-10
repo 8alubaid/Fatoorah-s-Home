@@ -17,8 +17,8 @@ export default function Profile() {
   const { transactions } = useBank();
   const [busy, setBusy] = useState(false);
 
-  const email = user?.email || "—";
-  const initial = (email[0] || "?").toUpperCase();
+  const email = user?.email || "Demo workspace";
+  const initial = user?.email ? user.email[0].toUpperCase() : "D";
   const memberSince = user?.created_at
     ? new Date(user.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
     : null;
@@ -38,7 +38,7 @@ export default function Profile() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Profile 👤" />
+        <ScreenHeader title="Profile" subtitle="Account and application preferences" />
 
         {/* Account */}
         <Card style={styles.accountCard}>

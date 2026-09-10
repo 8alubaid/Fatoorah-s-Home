@@ -1,78 +1,75 @@
-// Design tokens. Colors are split into light + dark palettes (see getColors).
-// Use them via useTheme()/useThemedStyles in src/ThemeContext.js — don't import
-// a palette statically, or it won't react to light/dark switches.
-
-// Dark palette — matches the dark app icon (near-black, green accent).
+// Semantic design tokens shared by the native and web experiences.
 export const darkColors = {
-  bg: "#0B0B0C",
-  surface: "#161618",
-  surfaceAlt: "#212124",
-  border: "#2A2A2E",
-  text: "#F5F5F7",
-  textMuted: "#9A9AA2",
-  textFaint: "#6B6B73",
-  primary: "#34C759",
-  primarySoft: "#13281B",
-  success: "#34C759",
-  warning: "#FBBF24",
-  danger: "#FF6B6B",
+  bg: "#0B1110",
+  surface: "#111A18",
+  surfaceAlt: "#182321",
+  border: "#273431",
+  text: "#F3F7F5",
+  textMuted: "#A1ADA9",
+  textFaint: "#6F7D79",
+  primary: "#43B581",
+  primaryHover: "#52C28F",
+  primarySoft: "#142A22",
+  success: "#43B581",
+  warning: "#E5A93D",
+  danger: "#F07178",
   white: "#FFFFFF",
   onPrimary: "#FFFFFF",
-  onPrimaryMuted: "#DDF3E4",
-  onPrimaryDivider: "rgba(255,255,255,0.25)",
-  tabBar: "rgba(26,26,29,0.86)", // translucent pill (floating tab bar)
-  tabBarActiveBg: "rgba(52,199,89,0.16)", // active item highlight
+  onPrimaryMuted: "#D8F3E7",
+  onPrimaryDivider: "rgba(255,255,255,0.24)",
+  tabBar: "rgba(17,26,24,0.94)",
+  tabBarActiveBg: "rgba(67,181,129,0.14)",
+  shadow: "#000000",
 };
 
-// Light palette — matches the light app icon (off-white, deeper green accent).
 export const lightColors = {
-  bg: "#F4F5F7",
+  bg: "#F5F7F6",
   surface: "#FFFFFF",
-  surfaceAlt: "#ECEDF1",
-  border: "#E3E4E9",
-  text: "#16181D",
-  textMuted: "#5E626B",
-  textFaint: "#9A9DA6",
-  primary: "#2E9E63",
-  primarySoft: "#E7F6EE",
-  success: "#2E9E63",
-  warning: "#C77D08",
-  danger: "#E5484D",
+  surfaceAlt: "#EEF2F0",
+  border: "#DDE5E1",
+  text: "#17211E",
+  textMuted: "#5D6B66",
+  textFaint: "#899691",
+  primary: "#147A52",
+  primaryHover: "#0F6845",
+  primarySoft: "#E7F3ED",
+  success: "#147A52",
+  warning: "#A96D12",
+  danger: "#C9464D",
   white: "#FFFFFF",
   onPrimary: "#FFFFFF",
-  onPrimaryMuted: "#E3F5EA",
-  onPrimaryDivider: "rgba(255,255,255,0.30)",
-  tabBar: "rgba(255,255,255,0.92)", // translucent pill (floating tab bar)
-  tabBarActiveBg: "rgba(46,158,99,0.14)", // active item highlight
+  onPrimaryMuted: "#DDF2E8",
+  onPrimaryDivider: "rgba(255,255,255,0.28)",
+  tabBar: "rgba(255,255,255,0.96)",
+  tabBarActiveBg: "rgba(20,122,82,0.10)",
+  shadow: "#0B2119",
 };
 
 export const getColors = (scheme) => (scheme === "light" ? lightColors : darkColors);
 
-// Vertical space screens leave at the bottom so content clears the floating tab bar.
 export const TAB_BAR_SPACE = 104;
+export const SIDEBAR_WIDTH = 256;
+export const CONTENT_MAX = 960;
 
-// Web layout: fixed left sidebar width + comfortable reading width for content.
-export const SIDEBAR_WIDTH = 244;
-export const CONTENT_MAX = 880;
-
-// Per-category color + emoji (theme-independent — readable on both palettes).
 export const categoryMeta = {
-  Food: { color: "#34C759", emoji: "🍔" },
-  Shopping: { color: "#A78BFA", emoji: "🛍️" },
-  Transport: { color: "#60A5FA", emoji: "🚗" },
-  Bills: { color: "#FBBF24", emoji: "💡" },
-  Groceries: { color: "#F472B6", emoji: "🛒" },
-  Entertainment: { color: "#22D3EE", emoji: "🎬" },
-  Health: { color: "#FB7185", emoji: "💊" },
-  Other: { color: "#94A3B8", emoji: "📦" },
+  Food: { color: "#2E8B65", icon: "restaurant-outline", emoji: "🍔" },
+  Shopping: { color: "#7A6DB0", icon: "bag-handle-outline", emoji: "🛍️" },
+  Transport: { color: "#3979A8", icon: "car-outline", emoji: "🚗" },
+  Bills: { color: "#B57A21", icon: "flash-outline", emoji: "💡" },
+  Groceries: { color: "#A85E7F", icon: "basket-outline", emoji: "🛒" },
+  Entertainment: { color: "#307F8B", icon: "film-outline", emoji: "🎬" },
+  Health: { color: "#B85863", icon: "medical-outline", emoji: "💊" },
+  Other: { color: "#64748B", icon: "cube-outline", emoji: "📦" },
 };
 
-export const categoryColor = (c) =>
-  (categoryMeta[c] && categoryMeta[c].color) || categoryMeta.Other.color;
-export const categoryEmoji = (c) =>
-  (categoryMeta[c] && categoryMeta[c].emoji) || categoryMeta.Other.emoji;
+export const categoryColor = (category) =>
+  (categoryMeta[category] && categoryMeta[category].color) || categoryMeta.Other.color;
+export const categoryIcon = (category) =>
+  (categoryMeta[category] && categoryMeta[category].icon) || categoryMeta.Other.icon;
+export const categoryEmoji = (category) =>
+  (categoryMeta[category] && categoryMeta[category].emoji) || categoryMeta.Other.emoji;
 
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 };
-export const radius = { sm: 8, md: 14, lg: 20, pill: 999 };
+export const radius = { sm: 6, md: 10, lg: 14, pill: 999 };
 
 export const CURRENCY = "SAR";

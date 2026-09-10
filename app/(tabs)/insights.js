@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Platform } from "react-n
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { spacing, radius, categoryColor, categoryEmoji, TAB_BAR_SPACE, CONTENT_MAX } from "../../src/theme";
+import { spacing, radius, categoryColor, TAB_BAR_SPACE, CONTENT_MAX } from "../../src/theme";
 
 const isWeb = Platform.OS === "web";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
@@ -43,7 +43,7 @@ export default function Insights() {
   if (restoring) {
     return (
       <SafeAreaView style={styles.safe} edges={["top"]}>
-        <ScreenHeader title="Insights 📊" />
+        <ScreenHeader title="Insights" />
         <ScreenLoading label="Loading your insights…" />
       </SafeAreaView>
     );
@@ -52,14 +52,14 @@ export default function Insights() {
   if (!connected) {
     return (
       <SafeAreaView style={styles.safe} edges={["top"]}>
-        <ScreenHeader title="Insights 📊" />
+        <ScreenHeader title="Insights" />
         <EmptyState
-          emoji="📊"
+          icon="analytics-outline"
           title="No data to chart yet"
           message="Upload a bank statement (PDF) and you'll see spending trends, weekly charts, and category breakdowns here."
           buttonLabel="Upload statement"
           onPress={() => router.push("/import")}
-          note="🔒 Automatic bank sync — coming soon"
+          note="Secure automatic bank sync is coming soon"
         />
       </SafeAreaView>
     );
@@ -86,7 +86,7 @@ export default function Insights() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Insights 📊" />
+        <ScreenHeader title="Insights" />
 
         {/* Month navigator (back up to 3 months) */}
         <View style={styles.monthNav}>
@@ -161,7 +161,7 @@ export default function Insights() {
                   <View key={c.category} style={styles.catRow}>
                     <View style={[styles.catDot, { backgroundColor: categoryColor(c.category) }]} />
                     <Text style={styles.catName}>
-                      {categoryEmoji(c.category)} {c.category}
+                      {c.category}
                     </Text>
                     <Text style={styles.catAmount}>
                       {money(c.amount)} <Text style={styles.catPct}>· {pct}%</Text>

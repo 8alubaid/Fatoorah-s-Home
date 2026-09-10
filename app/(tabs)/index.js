@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Platf
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { spacing, radius, categoryColor, categoryEmoji, TAB_BAR_SPACE, CONTENT_MAX } from "../../src/theme";
+import { spacing, radius, categoryColor, categoryIcon, TAB_BAR_SPACE, CONTENT_MAX } from "../../src/theme";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
 import { Card, ScreenHeader, SectionTitle, ProgressBar, Avatar, EmptyState, ScreenLoading } from "../../src/components/ui";
 
@@ -37,14 +37,14 @@ export default function Dashboard() {
   if (!connected) {
     return (
       <SafeAreaView style={styles.safe} edges={["top"]}>
-        <ScreenHeader title="Fatoorah" subtitle={`Hello 👋 · ${monthLabel(TODAY)}`} />
+        <ScreenHeader title="Overview" subtitle={monthLabel(TODAY)} />
         <EmptyState
-          emoji="🧾"
+          icon="document-text-outline"
           title="Add your transactions"
           message="Upload a bank statement (PDF) and Fatoorah reads and categorizes every transaction for you — then tracks your spending automatically."
           buttonLabel="Upload statement"
           onPress={() => router.push("/import")}
-          note="🔒 Automatic bank sync — coming soon"
+          note="Secure automatic bank sync is coming soon"
         />
       </SafeAreaView>
     );
@@ -64,13 +64,13 @@ export default function Dashboard() {
       ? `${cats[0].category} is your biggest category at ${money(cats[0].amount)}. `
       : "") +
     (month <= MONTHLY_BUDGET
-      ? `You're ${money(MONTHLY_BUDGET - month)} under your ${money(MONTHLY_BUDGET)} budget — nice pace. 👍`
-      : `You're ${money(month - MONTHLY_BUDGET)} over budget this month. ⚠️`);
+      ? `You are ${money(MONTHLY_BUDGET - month)} under your ${money(MONTHLY_BUDGET)} monthly budget.`
+      : `You are ${money(month - MONTHLY_BUDGET)} over your monthly budget.`);
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Fatoorah" subtitle={`Hello 👋 · ${monthLabel(ref)}`} />
+        <ScreenHeader title="Overview" subtitle={`Financial activity for ${monthLabel(ref)}`} />
 
         {/* Hero: month + week totals */}
         <Card style={styles.hero}>
@@ -97,7 +97,7 @@ export default function Dashboard() {
           {accounts.length > 0 ? (
             accounts.map((a, i) => (
               <View key={a.id} style={[styles.acctRow, i < accounts.length - 1 && styles.divider]}>
-                <Avatar emoji="🏦" color={colors.primary} />
+                <Avatar icon="business-outline" color={colors.primary} label="Bank account" />
                 <View style={styles.acctMid}>
                   <Text style={styles.acctName}>{a.name}</Text>
                   <Text style={styles.acctSub}>{a.bankName} · {a.mask}</Text>
@@ -109,7 +109,7 @@ export default function Dashboard() {
             ))
           ) : (
             <View style={styles.acctRow}>
-              <Avatar emoji="🧾" color={colors.primary} />
+              <Avatar icon="document-text-outline" color={colors.primary} label="Imported statement" />
               <View style={styles.acctMid}>
                 <Text style={styles.acctName}>{transactions.length} transactions imported</Text>
                 <Text style={styles.acctSub}>From your uploaded statements</Text>
@@ -144,8 +144,8 @@ export default function Dashboard() {
           </View>
         </Card>
 
-        {/* AI summary */}
-        <SectionTitle>AI Summary ✨</SectionTitle>
+        {/* Automated summary */}
+        <SectionTitle>Spending summary</SectionTitle>
         <Card style={styles.aiCard}>
           <Text style={styles.aiText}>{summary}</Text>
         </Card>
@@ -167,9 +167,7 @@ export default function Dashboard() {
           {topThree.map((c) => (
             <View key={c.category} style={styles.catLine}>
               <View style={[styles.dot, { backgroundColor: categoryColor(c.category) }]} />
-              <Text style={styles.catName}>
-                {categoryEmoji(c.category)} {c.category}
-              </Text>
+              <Text style={styles.catName}>{c.category}</Text>
               <Text style={styles.catAmount}>{money(c.amount)}</Text>
             </View>
           ))}
@@ -180,7 +178,7 @@ export default function Dashboard() {
         <Card style={{ paddingVertical: spacing.xs }}>
           {recent.map((r, i) => (
             <View key={r.id} style={[styles.receiptRow, i < recent.length - 1 && styles.divider]}>
-              <Avatar emoji={categoryEmoji(r.category)} color={categoryColor(r.category)} />
+              <Avatar icon={categoryIcon(r.category)} color={categoryColor(r.category)} label={r.category} />
               <View style={styles.receiptMid}>
                 <Text style={styles.receiptName}>{r.merchant}</Text>
                 <Text style={styles.receiptSub}>

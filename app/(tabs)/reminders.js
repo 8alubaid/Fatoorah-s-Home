@@ -39,7 +39,7 @@ export default function Reminders() {
   if (restoring) {
     return (
       <SafeAreaView style={styles.safe} edges={["top"]}>
-        <ScreenHeader title="Reminders ⏰" />
+        <ScreenHeader title="Reminders" />
         <ScreenLoading label="Finding your subscriptions…" />
       </SafeAreaView>
     );
@@ -48,14 +48,14 @@ export default function Reminders() {
   if (!connected) {
     return (
       <SafeAreaView style={styles.safe} edges={["top"]}>
-        <ScreenHeader title="Reminders ⏰" />
+        <ScreenHeader title="Reminders" />
         <EmptyState
-          emoji="⏰"
+          icon="calendar-outline"
           title="No reminders yet"
           message="Upload a bank statement (PDF) and Fatoorah spots your recurring subscriptions and bills, then reminds you before each one renews."
           buttonLabel="Upload statement"
           onPress={() => router.push("/import")}
-          note="🔒 Automatic bank sync — coming soon"
+          note="Secure automatic bank sync is coming soon"
         />
       </SafeAreaView>
     );
@@ -90,7 +90,7 @@ export default function Reminders() {
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <ScreenHeader
-          title="Reminders ⏰"
+          title="Reminders"
           subtitle={
             items.length
               ? `${items.length} recurring · about ${money(Math.round(monthlyTotal))}/month`
@@ -175,7 +175,11 @@ export default function Reminders() {
                 const m = reminderMeta[r.type];
                 return (
                   <Card key={r.id} style={styles.reminderCard}>
-                    <Avatar emoji={m.emoji} color={m.color} />
+                    <Avatar
+                      icon={r.type === "bill" ? "document-text-outline" : "repeat-outline"}
+                      color={m.color}
+                      label={m.label}
+                    />
                     <View style={styles.reminderMid}>
                       <Text style={styles.reminderTitle} numberOfLines={1}>{r.title}</Text>
                       <Text style={styles.reminderSub} numberOfLines={1}>

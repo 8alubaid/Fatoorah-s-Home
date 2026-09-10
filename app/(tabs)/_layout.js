@@ -1,5 +1,5 @@
-import React from "react";
-import { Platform } from "react-native";
+import React, { useEffect, useState } from "react";
+import { AccessibilityInfo, Easing, Platform, useWindowDimensions } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,15 +13,33 @@ const isWeb = Platform.OS === "web";
 export default function TabsLayout() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const showSidebar = isWeb && width >= 760;
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);
+    return () => subscription.remove();
+  }, []);
+
   return (
     <Tabs
       // Web: a fixed left sidebar replaces the bottom tab bar; content is inset
       // past it. Native: the floating pill below.
-      tabBar={isWeb ? (props) => <WebSidebar {...props} /> : undefined}
-      sceneContainerStyle={isWeb ? { paddingLeft: SIDEBAR_WIDTH } : undefined}
+      tabBar={showSidebar ? (props) => <WebSidebar {...props} /> : undefined}
+      sceneContainerStyle={showSidebar ? { paddingLeft: SIDEBAR_WIDTH } : undefined}
       screenOptions={{
         headerShown: false,
-        sceneStyle: isWeb ? { paddingLeft: SIDEBAR_WIDTH } : undefined,
+        sceneStyle: showSidebar ? { paddingLeft: SIDEBAR_WIDTH } : undefined,
+        animation: reduceMotion ? "none" : "shift",
+        transitionSpec: {
+          animation: "timing",
+          config: {
+            duration: reduceMotion ? 1 : 220,
+            easing: Easing.out(Easing.cubic),
+          },
+        },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textFaint,
         tabBarActiveBackgroundColor: colors.tabBarActiveBg,
@@ -43,8 +61,8 @@ export default function TabsLayout() {
           shadowRadius: 16,
           shadowOffset: { width: 0, height: 8 },
         },
-        tabBarItemStyle: { height: 46, marginVertical: 8, marginHorizontal: 4, borderRadius: 22 },
-        tabBarLabelStyle: { fontSize: 10.5, fontWeight: "600" },
+        tabBarItemStyle: { height: 46, marginVertical: 8, marginHorizontal: 1, borderRadius: 22 },
+        tabBarLabelStyle: { fontSize: 9.5, fontWeight: "600" },
       }}
     >
       <Tabs.Screen name="index" options={{ title: "Dashboard", tabBarIcon: icon("home") }} />
