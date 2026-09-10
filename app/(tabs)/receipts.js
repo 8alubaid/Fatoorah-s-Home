@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TextInput, FlatList, Platform } fro
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { spacing, radius, categoryColor, categoryIcon, TAB_BAR_SPACE, CONTENT_MAX } from "../../src/theme";
+import { spacing, radius, categoryColor, categoryIcon, CONTENT_MAX } from "../../src/theme";
 
 const isWeb = Platform.OS === "web";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
@@ -11,6 +11,7 @@ import { ScreenHeader, Chip, Avatar, EmptyState, ScreenLoading } from "../../src
 import { sortedTransactions, allCategories, parseDate, latestTxDate } from "../../src/data";
 import { money, shortDate, TODAY } from "../../src/utils";
 import { useBank } from "../../src/bank/BankContext";
+import { useBottomSpace } from "../../src/useLayout";
 
 const DATE_FILTERS = [
   { key: "all", label: "All time" },
@@ -21,6 +22,7 @@ const DATE_FILTERS = [
 export default function Receipts() {
   const { colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
+  const bottomSpace = useBottomSpace();
   const { connected, transactions, restoring } = useBank();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
@@ -118,7 +120,7 @@ export default function Receipts() {
         data={filtered}
         keyExtractor={(r) => r.id}
         style={styles.listFill}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: bottomSpace }]}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={<Text style={styles.emptyText}>No receipts match your filters.</Text>}
         renderItem={({ item }) => (
@@ -162,7 +164,7 @@ const makeStyles = (colors) =>
     chipBar: { flexGrow: 0, flexShrink: 0 },
     chipRow: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, alignItems: "center" },
     listFill: { flex: 1 }, // claim the remaining space so the chips can't grow into it
-    list: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: isWeb ? spacing.xxl : TAB_BAR_SPACE, flexGrow: 1 },
+    list: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, flexGrow: 1 },
     row: {
       flexDirection: "row",
       alignItems: "center",

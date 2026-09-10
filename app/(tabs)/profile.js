@@ -2,17 +2,19 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { spacing, radius, TAB_BAR_SPACE, CONTENT_MAX } from "../../src/theme";
+import { spacing, radius, CONTENT_MAX } from "../../src/theme";
 
 const isWeb = Platform.OS === "web";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
 import { Card, ScreenHeader } from "../../src/components/ui";
 import { useAuth } from "../../src/auth/AuthContext";
 import { useBank } from "../../src/bank/BankContext";
+import { useBottomSpace } from "../../src/useLayout";
 
 export default function Profile() {
   const { colors, isDark, toggle } = useTheme();
   const styles = useThemedStyles(makeStyles);
+  const bottomSpace = useBottomSpace();
   const { user, signOut } = useAuth();
   const { transactions } = useBank();
   const [busy, setBusy] = useState(false);
@@ -37,7 +39,7 @@ export default function Profile() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: bottomSpace }]} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="Profile" subtitle="Account and application preferences" />
 
         {/* Account */}
@@ -89,7 +91,6 @@ const makeStyles = (colors) =>
     safe: { flex: 1, backgroundColor: colors.bg },
     scroll: {
       paddingHorizontal: spacing.lg,
-      paddingBottom: isWeb ? spacing.xxl : TAB_BAR_SPACE,
       ...(isWeb && { maxWidth: CONTENT_MAX, width: "100%", alignSelf: "center", paddingTop: spacing.md }),
     },
     accountCard: { alignItems: "center", paddingVertical: spacing.xl, marginTop: spacing.sm },

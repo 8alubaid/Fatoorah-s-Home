@@ -49,6 +49,9 @@ export const getColors = (scheme) => (scheme === "light" ? lightColors : darkCol
 
 export const TAB_BAR_SPACE = 104;
 export const SIDEBAR_WIDTH = 256;
+// Below this width the web layout drops the sidebar and shows the floating
+// bottom pill instead, so screens must reserve TAB_BAR_SPACE again.
+export const SIDEBAR_MIN_WIDTH = 760;
 export const CONTENT_MAX = 960;
 
 export const categoryMeta = {

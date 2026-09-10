@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Platf
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { spacing, radius, categoryColor, categoryIcon, TAB_BAR_SPACE, CONTENT_MAX } from "../../src/theme";
+import { spacing, radius, categoryColor, categoryIcon, CONTENT_MAX } from "../../src/theme";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
 import { Card, ScreenHeader, SectionTitle, ProgressBar, Avatar, EmptyState, ScreenLoading } from "../../src/components/ui";
 
@@ -17,12 +17,14 @@ import {
 } from "../../src/data";
 import { money, shortDate, monthLabel, timeAgo, TODAY } from "../../src/utils";
 import { useBank } from "../../src/bank/BankContext";
+import { useBottomSpace } from "../../src/useLayout";
 
 const MONTHLY_BUDGET = 4000;
 
 export default function Dashboard() {
   const { colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
+  const bottomSpace = useBottomSpace();
   const { connected, transactions, accounts, disconnect, restoring, refreshing, lastSynced, refresh } = useBank();
 
   if (restoring) {
@@ -69,7 +71,7 @@ export default function Dashboard() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: bottomSpace }]} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="Overview" subtitle={`Financial activity for ${monthLabel(ref)}`} />
 
         {/* Hero: month + week totals */}
@@ -201,7 +203,6 @@ const makeStyles = (colors) =>
     safe: { flex: 1, backgroundColor: colors.bg },
     scroll: {
       paddingHorizontal: spacing.lg,
-      paddingBottom: isWeb ? spacing.xxl : TAB_BAR_SPACE,
       ...(isWeb && { maxWidth: CONTENT_MAX, width: "100%", alignSelf: "center", paddingTop: spacing.md }),
     },
     hero: { backgroundColor: colors.primary, borderColor: colors.primary, marginTop: spacing.sm },

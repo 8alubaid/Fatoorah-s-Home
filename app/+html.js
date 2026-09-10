@@ -1,3 +1,7 @@
+// NOTE: Expo Router only uses this file when expo.web.output is "static".
+// This app is configured as "single" (SPA) in app.json, so nothing here runs
+// today — the equivalent global CSS and document metadata are applied from
+// app/_layout.js instead. Keep the two in sync if you ever switch to static.
 import React from "react";
 import { ScrollViewStyleReset } from "expo-router/html";
 import "./globals.css";

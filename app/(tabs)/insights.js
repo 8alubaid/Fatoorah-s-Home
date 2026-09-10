@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Platform } from "react-n
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { spacing, radius, categoryColor, TAB_BAR_SPACE, CONTENT_MAX } from "../../src/theme";
+import { spacing, radius, categoryColor, CONTENT_MAX } from "../../src/theme";
 
 const isWeb = Platform.OS === "web";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
@@ -11,6 +11,7 @@ import { Card, ScreenHeader, SectionTitle, EmptyState, ScreenLoading } from "../
 import { categoryTotals, totalForMonth, dailyTotals, latestTxDate } from "../../src/data";
 import { money, monthLabel, TODAY } from "../../src/utils";
 import { useBank } from "../../src/bank/BankContext";
+import { useBottomSpace } from "../../src/useLayout";
 
 const MAX_MONTHS_BACK = 3;
 
@@ -37,6 +38,7 @@ function weekLabel(ref, index) {
 export default function Insights() {
   const { colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
+  const bottomSpace = useBottomSpace();
   const { connected, transactions, restoring } = useBank();
   const [monthsBack, setMonthsBack] = useState(0);
 
@@ -85,7 +87,7 @@ export default function Insights() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: bottomSpace }]} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="Insights" />
 
         {/* Month navigator (back up to 3 months) */}
@@ -184,7 +186,6 @@ const makeStyles = (colors) =>
     safe: { flex: 1, backgroundColor: colors.bg },
     scroll: {
       paddingHorizontal: spacing.lg,
-      paddingBottom: isWeb ? spacing.xxl : TAB_BAR_SPACE,
       ...(isWeb && { maxWidth: CONTENT_MAX, width: "100%", alignSelf: "center", paddingTop: spacing.md }),
     },
     monthNav: {

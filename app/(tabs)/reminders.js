@@ -3,12 +3,13 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Platform } from "react-n
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { spacing, radius, TAB_BAR_SPACE, CONTENT_MAX } from "../../src/theme";
+import { spacing, radius, CONTENT_MAX } from "../../src/theme";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
 import { Card, ScreenHeader, SectionTitle, Avatar, EmptyState, ScreenLoading } from "../../src/components/ui";
 import { reminderMeta, parseDate, detectRecurring, monthlyRecurringTotal, latestTxDate } from "../../src/data";
 import { money, monthLabel, relativeDays, TODAY } from "../../src/utils";
 import { useBank } from "../../src/bank/BankContext";
+import { useBottomSpace } from "../../src/useLayout";
 
 const isWeb = Platform.OS === "web";
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
@@ -17,6 +18,7 @@ const iso = (y, m, d) => `${y}-${String(m).padStart(2, "0")}-${String(d).padStar
 export default function Reminders() {
   const { colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
+  const bottomSpace = useBottomSpace();
   const { connected, transactions, restoring } = useBank();
 
   // Anchor to the newest transaction so predictions read sensibly even when the
@@ -88,7 +90,7 @@ export default function Reminders() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: bottomSpace }]} showsVerticalScrollIndicator={false}>
         <ScreenHeader
           title="Reminders"
           subtitle={
@@ -216,7 +218,6 @@ const makeStyles = (colors) =>
     safe: { flex: 1, backgroundColor: colors.bg },
     scroll: {
       paddingHorizontal: spacing.lg,
-      paddingBottom: isWeb ? spacing.xxl : TAB_BAR_SPACE,
       ...(isWeb && { maxWidth: CONTENT_MAX, width: "100%", alignSelf: "center", paddingTop: spacing.md }),
     },
     calHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.md },

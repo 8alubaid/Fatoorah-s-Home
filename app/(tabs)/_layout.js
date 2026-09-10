@@ -1,20 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { AccessibilityInfo, Easing, Platform, useWindowDimensions } from "react-native";
+import { AccessibilityInfo, Easing } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../src/ThemeContext";
 import WebSidebar from "../../src/components/WebSidebar";
 import { SIDEBAR_WIDTH } from "../../src/theme";
+import { useShowSidebar } from "../../src/useLayout";
 
 const icon = (name) => ({ color, size }) => <Ionicons name={name} size={size - 1} color={color} />;
-const isWeb = Platform.OS === "web";
 
 export default function TabsLayout() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-  const showSidebar = isWeb && width >= 760;
+  const showSidebar = useShowSidebar();
   const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
