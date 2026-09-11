@@ -19,6 +19,7 @@ import { money, shortDate, monthLabel, timeAgo, TODAY } from "../../src/utils";
 import { useBank } from "../../src/bank/BankContext";
 import { useBottomSpace } from "../../src/useLayout";
 import { useBudget } from "../../src/settings/BudgetContext";
+import Money from "../../src/components/Money";
 
 
 export default function Dashboard() {
@@ -96,11 +97,11 @@ export default function Dashboard() {
         {/* Hero: month + week totals */}
         <Card style={styles.hero}>
           <Text style={styles.heroLabel}>Spent this month</Text>
-          <Text style={styles.heroAmount}>{money(month)}</Text>
+          <Money amount={month} style={styles.heroAmount} />
           <View style={styles.heroRow}>
             <View>
               <Text style={styles.heroSmallLabel}>This week</Text>
-              <Text style={styles.heroSmallValue}>{money(week)}</Text>
+              <Money amount={week} style={styles.heroSmallValue} />
             </View>
             <View style={styles.heroDivider} />
             <View>
@@ -123,9 +124,7 @@ export default function Dashboard() {
                   <Text style={styles.acctName}>{a.name}</Text>
                   <Text style={styles.acctSub}>{a.bankName} · {a.mask}</Text>
                 </View>
-                <Text style={[styles.acctBalance, a.balance < 0 && { color: colors.danger }]}>
-                  {money(a.balance)}
-                </Text>
+                <Money amount={a.balance} style={[styles.acctBalance, a.balance < 0 && { color: colors.danger }]} />
               </View>
             ))
           ) : (
@@ -212,8 +211,9 @@ export default function Dashboard() {
               accessibilityLabel={`Monthly budget ${money(budget)}. Tap to change.`}
               style={({ hovered }) => [styles.budgetRow, hovered && styles.budgetRowHover]}
             >
-              <Text style={styles.budgetSpent}>{money(month)}</Text>
-              <Text style={styles.budgetMax}>of {money(budget)}</Text>
+              <Money amount={month} style={styles.budgetSpent} />
+              <Text style={styles.budgetMax}>of</Text>
+              <Money amount={budget} style={styles.budgetMaxValue} />
               <View style={styles.budgetEditHint}>
                 <Ionicons name="pencil" size={13} color={colors.primary} />
                 <Text style={styles.budgetEditHintText}>Edit</Text>
@@ -229,7 +229,7 @@ export default function Dashboard() {
             <View key={c.category} style={styles.catLine}>
               <View style={[styles.dot, { backgroundColor: categoryColor(c.category) }]} />
               <Text style={styles.catName}>{c.category}</Text>
-              <Text style={styles.catAmount}>{money(c.amount)}</Text>
+              <Money amount={c.amount} style={styles.catAmount} />
             </View>
           ))}
         </Card>
@@ -246,7 +246,7 @@ export default function Dashboard() {
                   {r.category} · {shortDate(r.date)}
                 </Text>
               </View>
-              <Text style={styles.receiptAmount}>{money(r.amount)}</Text>
+              <Money amount={r.amount} style={styles.receiptAmount} />
             </View>
           ))}
         </Card>
@@ -325,6 +325,7 @@ const makeStyles = (colors) =>
     budgetBtnPrimaryText: { color: colors.onPrimary, fontSize: 14, fontWeight: "700" },
     budgetSpent: { color: colors.text, fontSize: 22, fontWeight: "800" },
     budgetMax: { color: colors.textMuted, fontSize: 14, marginLeft: 6, marginBottom: 2 },
+    budgetMaxValue: { color: colors.textMuted, fontSize: 14, marginLeft: 4, marginBottom: 2 },
     catLine: { flexDirection: "row", alignItems: "center", marginTop: spacing.md },
     dot: { width: 10, height: 10, borderRadius: 5, marginRight: spacing.sm },
     catName: { color: colors.textMuted, fontSize: 14, flex: 1 },

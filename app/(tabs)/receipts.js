@@ -12,6 +12,7 @@ import { sortedTransactions, allCategories, parseDate, latestTxDate } from "../.
 import { money, shortDate, TODAY } from "../../src/utils";
 import { useBank } from "../../src/bank/BankContext";
 import { useBottomSpace } from "../../src/useLayout";
+import Money from "../../src/components/Money";
 
 const DATE_FILTERS = [
   { key: "all", label: "All time" },
@@ -133,7 +134,7 @@ export default function Receipts() {
               </Text>
               {item.note ? <Text style={styles.note}>{item.note}</Text> : null}
             </View>
-            <Text style={styles.amount}>{money(item.amount)}</Text>
+            <Money amount={item.amount} style={styles.amount} />
           </View>
         )}
       />

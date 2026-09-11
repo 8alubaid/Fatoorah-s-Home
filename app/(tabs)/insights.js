@@ -9,6 +9,7 @@ const isWeb = Platform.OS === "web";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
 import { Card, ScreenHeader, SectionTitle, Avatar, EmptyState, ScreenLoading } from "../../src/components/ui";
 import DonutChart from "../../src/components/DonutChart";
+import Money from "../../src/components/Money";
 import {
   categoryTotals,
   totalForMonth,
@@ -154,7 +155,7 @@ export default function Insights() {
           <View style={styles.trendRow}>
             <View>
               <Text style={styles.trendLabel}>This month</Text>
-              <Text style={styles.trendAmount}>{money(month)}</Text>
+              <Money amount={month} style={styles.trendAmount} />
             </View>
             <View style={[styles.trendBadge, { backgroundColor: (trendUp ? colors.danger : colors.success) + "22" }]}>
               <Ionicons
@@ -183,7 +184,7 @@ export default function Insights() {
                 data={catSlices}
                 selectedKey={activeCat}
                 onSelect={setPickedCat}
-                centerValue={money(month)}
+                centerValue={<Money amount={month} style={styles.donutCenter} />}
                 centerLabel={`${cats.length} categories`}
               />
               <View style={styles.legend}>
@@ -206,7 +207,7 @@ export default function Insights() {
                         {c.category}
                       </Text>
                       <Text style={styles.legendPct}>{pct(c.amount, month)}%</Text>
-                      <Text style={styles.legendAmount}>{money(c.amount)}</Text>
+                      <Money amount={c.amount} style={styles.legendAmount} />
                     </Pressable>
                   );
                 })}
@@ -235,7 +236,12 @@ export default function Insights() {
                   data={merchantSlices}
                   selectedKey={activeMerchant}
                   onSelect={toggleMerchant}
-                  centerValue={money(activeMerchant ? merchants.find((m) => m.merchant === activeMerchant).amount : activeCatTotal)}
+                  centerValue={
+                    <Money
+                      amount={activeMerchant ? merchants.find((m) => m.merchant === activeMerchant).amount : activeCatTotal}
+                      style={styles.donutCenter}
+                    />
+                  }
                   centerLabel={activeMerchant || activeCat}
                 />
                 <View style={styles.legend}>
@@ -258,7 +264,7 @@ export default function Insights() {
                           {m.merchant}
                         </Text>
                         <Text style={styles.legendPct}>{pct(m.amount, activeCatTotal)}%</Text>
-                        <Text style={styles.legendAmount}>{money(m.amount)}</Text>
+                        <Money amount={m.amount} style={styles.legendAmount} />
                       </Pressable>
                     );
                   })}
@@ -286,9 +292,15 @@ export default function Insights() {
                   accessibilityLabel={`${weekLabel(ref, i)}: ${money(Math.round(v))}. Show purchases.`}
                   style={({ hovered }) => [styles.barCol, hovered && styles.barColHover]}
                 >
-                  <Text style={[styles.barValue, isPicked && styles.barValueActive]} numberOfLines={1}>
-                    {v > 0 ? money(Math.round(v)) : ""}
-                  </Text>
+                  {v > 0 ? (
+                    <Money
+                      amount={Math.round(v)}
+                      style={[styles.barValue, isPicked && styles.barValueActive]}
+                      numberOfLines={1}
+                    />
+                  ) : (
+                    <View style={styles.barValueSpacer} />
+                  )}
                   <View style={styles.barTrack}>
                     <View
                       style={[
@@ -316,7 +328,7 @@ export default function Insights() {
         {/* Purchases inside the selected week */}
         {pickedWeek !== null ? (
           <>
-            <SectionTitle right={money(Math.round(weeks[pickedWeek]))}>
+            <SectionTitle right={<Money amount={Math.round(weeks[pickedWeek])} style={styles.sectionRightMoney} />}>
               {weekLabel(ref, pickedWeek)}
             </SectionTitle>
             <Card style={{ paddingVertical: spacing.xs }}>
@@ -340,7 +352,7 @@ export default function Insights() {
                       {t.category} · {shortDate(t.date)}
                     </Text>
                   </View>
-                  <Text style={styles.weekAmount}>{money(t.amount)}</Text>
+                  <Money amount={t.amount} style={styles.weekAmount} />
                 </View>
               ))}
             </Card>
@@ -357,18 +369,18 @@ export default function Insights() {
                 <Text style={styles.statLabel}>Transactions</Text>
               </Card>
               <Card style={styles.statCard}>
-                <Text style={styles.statValue}>{money(Math.round(stats.perActiveDay))}</Text>
+                <Money amount={Math.round(stats.perActiveDay)} style={styles.statValue} />
                 <Text style={styles.statLabel}>Per spending day</Text>
               </Card>
               <Card style={styles.statCard}>
-                <Text style={styles.statValue} numberOfLines={1}>{money(stats.biggest.amount)}</Text>
+                <Money amount={stats.biggest.amount} style={styles.statValue} numberOfLines={1} />
                 <Text style={styles.statLabel} numberOfLines={1}>
                   Biggest · {stats.biggest.merchant}
                 </Text>
                 <Text style={styles.statSub}>{shortDate(stats.biggest.date)}</Text>
               </Card>
               <Card style={styles.statCard}>
-                <Text style={styles.statValue} numberOfLines={1}>{money(stats.topMerchant.amount)}</Text>
+                <Money amount={stats.topMerchant.amount} style={styles.statValue} numberOfLines={1} />
                 <Text style={styles.statLabel} numberOfLines={1}>
                   Most spent · {stats.topMerchant.merchant}
                 </Text>
@@ -445,7 +457,12 @@ const makeStyles = (colors) =>
     barCol: { flex: 1, alignItems: "center", cursor: "pointer", paddingTop: 2 },
     barTrack: { width: 26, height: 130, justifyContent: "flex-end", borderRadius: radius.sm },
     bar: { width: "100%", borderRadius: radius.sm, minHeight: 4 },
-    barValue: { color: colors.textMuted, fontSize: 9.5, fontWeight: "600", marginBottom: 4, height: 14 },
+    barValue: { color: colors.textMuted, fontSize: 10.5, fontWeight: "600", marginBottom: 4, height: 15 },
+    barValueSpacer: { height: 15, marginBottom: 4 },
+    // Mirrors DonutChart's internal centre style, since passing a node opts
+    // out of it.
+    donutCenter: { color: colors.text, fontSize: 20, fontWeight: "800", letterSpacing: -0.4 },
+    sectionRightMoney: { color: colors.textMuted, fontSize: 12.5, fontWeight: "600" },
     barLabel: { color: colors.textFaint, fontSize: 10.5, marginTop: 6 },
     barLabelActive: { color: colors.primary, fontWeight: "700" },
     barValueActive: { color: colors.text, fontWeight: "700" },

@@ -54,7 +54,11 @@ export function SectionTitle({ children, right }) {
   return (
     <View style={styles.sectionRow}>
       <Text style={styles.sectionTitle}>{children}</Text>
-      {right ? <Text style={styles.sectionRight}>{right}</Text> : null}
+      {typeof right === "string" || typeof right === "number" ? (
+        <Text style={styles.sectionRight}>{right}</Text>
+      ) : (
+        right ?? null
+      )}
     </View>
   );
 }

@@ -93,7 +93,11 @@ export default function DonutChart({
       <View style={styles.center} pointerEvents="none">
         {total > 0 ? (
           <>
-            {centerValue ? <Text style={styles.centerValue}>{centerValue}</Text> : null}
+            {typeof centerValue === "string" || typeof centerValue === "number" ? (
+              <Text style={styles.centerValue}>{centerValue}</Text>
+            ) : (
+              centerValue ?? null
+            )}
             {centerLabel ? <Text style={styles.centerLabel}>{centerLabel}</Text> : null}
           </>
         ) : (

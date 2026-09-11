@@ -7,8 +7,14 @@ export const TODAY = new Date(2026, 5, 6); // 2026-06-06
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const MONTHS_LONG = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-export const money = (n) =>
-  `${CURRENCY} ${Number(n).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+// Just the digits, no currency — used by <Money>, which draws the riyal symbol
+// as a vector glyph beside the number.
+export const amountOnly = (n) =>
+  Number(n).toLocaleString("en-US", { maximumFractionDigits: 0 });
+
+// Text form, still used in prose ("You've spent SAR 1,470 in June"), where a
+// spelled-out code reads better than a glyph mid-sentence.
+export const money = (n) => `${CURRENCY} ${amountOnly(n)}`;
 
 export const shortDate = (iso) => {
   const d = parseDate(iso);

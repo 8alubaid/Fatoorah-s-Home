@@ -10,6 +10,7 @@ import { reminderMeta, parseDate, detectRecurring, monthlyRecurringTotal, latest
 import { money, monthLabel, relativeDays, TODAY } from "../../src/utils";
 import { useBank } from "../../src/bank/BankContext";
 import { useBottomSpace } from "../../src/useLayout";
+import Money from "../../src/components/Money";
 
 const isWeb = Platform.OS === "web";
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
@@ -184,10 +185,14 @@ export default function Reminders() {
                     />
                     <View style={styles.reminderMid}>
                       <Text style={styles.reminderTitle} numberOfLines={1}>{r.title}</Text>
-                      <Text style={styles.reminderSub} numberOfLines={1}>
-                        {money(r.amount)} · {r.cadence}
-                        {r.seen > 1 ? ` · seen ${r.seen}×` : ""}
-                      </Text>
+                      <View style={styles.reminderSubRow}>
+                        <Money amount={r.amount} style={styles.reminderSub} />
+                        <Text style={styles.reminderSub} numberOfLines={1}>
+                          {" · "}
+                          {r.cadence}
+                          {r.seen > 1 ? ` · seen ${r.seen}×` : ""}
+                        </Text>
+                      </View>
                     </View>
                     <View style={styles.reminderRight}>
                       <View style={[styles.typePill, { backgroundColor: m.color + "22" }]}>
@@ -253,6 +258,7 @@ const makeStyles = (colors) =>
     reminderMid: { flex: 1, marginLeft: spacing.md },
     reminderTitle: { color: colors.text, fontSize: 15, fontWeight: "700" },
     reminderSub: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
+    reminderSubRow: { flexDirection: "row", alignItems: "center" },
     reminderRight: { alignItems: "flex-end" },
     typePill: { paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: radius.pill },
     typePillText: { fontSize: 11, fontWeight: "700" },
