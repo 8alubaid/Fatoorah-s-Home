@@ -7,7 +7,7 @@ import { spacing, radius, CONTENT_MAX } from "../../src/theme";
 import { useTheme, useThemedStyles } from "../../src/ThemeContext";
 import { Card, ScreenHeader, SectionTitle, Avatar, EmptyState, ScreenLoading } from "../../src/components/ui";
 import { reminderMeta, parseDate, detectRecurring, monthlyRecurringTotal, latestTxDate } from "../../src/data";
-import { money, monthLabel, relativeDays, TODAY } from "../../src/utils";
+import { money, monthLabel, relativeDays, weekdayDate, TODAY } from "../../src/utils";
 import { useBank } from "../../src/bank/BankContext";
 import { useBottomSpace } from "../../src/useLayout";
 import Money from "../../src/components/Money";
@@ -143,7 +143,16 @@ export default function Reminders() {
                   return (
                     <Pressable key={i} style={styles.cell} onPress={() => setSelected(isSelected ? null : cellIso)}>
                       <View style={[styles.dayCircle, isToday && styles.dayToday, isSelected && styles.daySelected]}>
-                        <Text style={[styles.dayNum, (isToday || isSelected) && styles.dayNumActive]}>{day}</Text>
+                        <Text
+                          style={[
+                            styles.dayNum,
+                            // White only on the filled "today" circle. The selected
+                            // day is just an outline, so white would be invisible.
+                            isToday ? styles.dayNumToday : isSelected && styles.dayNumSelected,
+                          ]}
+                        >
+                          {day}
+                        </Text>
                       </View>
                       <View style={styles.dotRow}>
                         {dayItems.slice(0, 3).map((r, j) => (
@@ -163,10 +172,22 @@ export default function Reminders() {
                   </View>
                 ))}
               </View>
+              <Text style={styles.calHint}>
+                {selected ? "Showing one day — tap the day again to clear" : "Tap a day to see what falls on it"}
+              </Text>
             </Card>
 
-            <SectionTitle right={selected ? "Showing one day" : undefined}>
-              {selected ? `On ${selected.split("-").reverse().slice(0, 2).join("/")}` : "Upcoming"}
+            <SectionTitle
+              right={
+                selected ? (
+                  <Pressable onPress={() => setSelected(null)} hitSlop={8} style={styles.clearDay}>
+                    <Ionicons name="close" size={14} color={colors.primary} />
+                    <Text style={styles.clearDayText}>Show all</Text>
+                  </Pressable>
+                ) : undefined
+              }
+            >
+              {selected ? weekdayDate(selected) : "Upcoming"}
             </SectionTitle>
 
             {listForSelected.length === 0 ? (
@@ -198,6 +219,7 @@ export default function Reminders() {
                       <View style={[styles.typePill, { backgroundColor: m.color + "22" }]}>
                         <Text style={[styles.typePillText, { color: m.color }]}>{m.label}</Text>
                       </View>
+                      <Text style={styles.reminderDate}>{weekdayDate(r.date)}</Text>
                       <Text style={styles.reminderWhen}>{relativeDays(r.date, anchor)}</Text>
                       {r.confidence === "low" ? <Text style={styles.likely}>likely</Text> : null}
                     </View>
@@ -234,9 +256,10 @@ const makeStyles = (colors) =>
     cell: { width: `${100 / 7}%`, alignItems: "center", paddingVertical: 4 },
     dayCircle: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center" },
     dayToday: { backgroundColor: colors.primary },
-    daySelected: { borderWidth: 1.5, borderColor: colors.primary },
+    daySelected: { borderWidth: 2, borderColor: colors.primary, backgroundColor: colors.primarySoft },
     dayNum: { color: colors.text, fontSize: 14, fontWeight: "600" },
-    dayNumActive: { color: colors.white, fontWeight: "800" },
+    dayNumToday: { color: colors.white, fontWeight: "800" },
+    dayNumSelected: { color: colors.primary, fontWeight: "800" },
     dotRow: { flexDirection: "row", height: 6, marginTop: 3 },
     dot: { width: 5, height: 5, borderRadius: 3, marginHorizontal: 1 },
     legend: {
@@ -250,6 +273,10 @@ const makeStyles = (colors) =>
     legendItem: { flexDirection: "row", alignItems: "center", marginRight: spacing.lg, marginBottom: 4 },
     legendText: { color: colors.textMuted, fontSize: 12, marginLeft: 5 },
     empty: { color: colors.textMuted, textAlign: "center" },
+    calHint: { color: colors.textFaint, fontSize: 11.5, textAlign: "center", marginTop: spacing.md },
+    clearDay: { flexDirection: "row", alignItems: "center", gap: 3, cursor: "pointer" },
+    clearDayText: { color: colors.primary, fontSize: 12.5, fontWeight: "700" },
+    reminderDate: { color: colors.text, fontSize: 12, fontWeight: "700", marginTop: 4 },
     emptyTitle: { color: colors.text, fontSize: 16, fontWeight: "700", textAlign: "center" },
     emptyBody: { color: colors.textMuted, fontSize: 14, lineHeight: 20, textAlign: "center", marginTop: spacing.sm },
     emptyBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: spacing.lg },
@@ -262,7 +289,7 @@ const makeStyles = (colors) =>
     reminderRight: { alignItems: "flex-end" },
     typePill: { paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: radius.pill },
     typePillText: { fontSize: 11, fontWeight: "700" },
-    reminderWhen: { color: colors.textFaint, fontSize: 12, marginTop: 4 },
+    reminderWhen: { color: colors.textFaint, fontSize: 11.5, marginTop: 1 },
     likely: { color: colors.textFaint, fontSize: 10, fontStyle: "italic", marginTop: 1 },
     footnote: { color: colors.textFaint, fontSize: 11.5, textAlign: "center", marginTop: spacing.lg, lineHeight: 16 },
   });

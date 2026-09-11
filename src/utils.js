@@ -21,6 +21,15 @@ export const shortDate = (iso) => {
   return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
 };
 
+const WEEKDAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+// "Fri 26 Jun" — names the weekday and day-of-month so a reminder can be matched
+// to a square on the calendar without counting days.
+export const weekdayDate = (iso) => {
+  const d = parseDate(iso);
+  return `${WEEKDAYS_SHORT[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+};
+
 export const monthLabel = (ref) => `${MONTHS_LONG[ref.getMonth()]} ${ref.getFullYear()}`;
 
 // "just now", "2m ago", "1h ago", "3d ago" — for the last-synced label.
