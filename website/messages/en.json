@@ -1,0 +1,166 @@
+{
+  "Meta": {
+    "title": "Fatoorah — See where your money really goes",
+    "description": "Upload a bank statement and Fatoorah categorizes every transaction, tracks your subscriptions, and shows where your money goes. Built for Saudi Arabia."
+  },
+  "Nav": {
+    "features": "Features",
+    "pricing": "Pricing",
+    "security": "Security",
+    "blog": "Blog",
+    "contact": "Contact",
+    "signIn": "Sign in",
+    "getStarted": "Get started free",
+    "language": "العربية",
+    "menu": "Menu",
+    "featureItems": {
+      "import": { "title": "Statement import", "desc": "Turn any bank PDF into clean, categorized transactions." },
+      "insights": { "title": "Spending insights", "desc": "Charts that show where every riyal goes, week by week." },
+      "subscriptions": { "title": "Subscription tracking", "desc": "Spot recurring charges before they renew." },
+      "budgets": { "title": "Budgets", "desc": "Set a monthly limit and watch your pace." }
+    }
+  },
+  "Hero": {
+    "badge": "Automatic bank sync coming soon",
+    "title": "See where your money really goes",
+    "subtitle": "Upload a bank statement and Fatoorah reads every transaction, sorts it into categories, and finds the subscriptions quietly draining your account.",
+    "primary": "Start for free",
+    "secondary": "See how it works",
+    "note": "No card required · Cancel anytime"
+  },
+  "Mockup": {
+    "welcome": "Welcome back",
+    "name": "Your account",
+    "spent": "Spent this month",
+    "week": "This week",
+    "budget": "Budget",
+    "spending": "Spending over time",
+    "categories": "Where your money went",
+    "upcoming": "Upcoming renewals",
+    "dashboard": "Overview",
+    "totalSpent": "Total spent",
+    "transactions": "Transactions",
+    "subscriptions": "Subscriptions",
+    "search": "Search",
+    "food": "Food",
+    "shopping": "Shopping",
+    "bills": "Bills",
+    "groceries": "Groceries",
+    "transport": "Transport",
+    "netflix": "Netflix",
+    "electricity": "Saudi Electricity",
+    "inDays": "in {days} days"
+  },
+  "Features": {
+    "eyebrow": "Features",
+    "title": "Everything you need to understand your spending",
+    "subtitle": "Built around how people in Saudi Arabia actually pay: mada cards, bills, delivery apps, and subscriptions.",
+    "items": {
+      "import": { "title": "Statement import", "desc": "Upload a PDF from your bank. Every transaction is read, cleaned up, and categorized in under a minute." },
+      "insights": { "title": "Clear insights", "desc": "Interactive charts break spending down by category, merchant, and week, so you can see exactly what changed." },
+      "subscriptions": { "title": "Subscription radar", "desc": "Fatoorah finds recurring charges like streaming, telecom, and utilities, and reminds you before they renew." },
+      "budgets": { "title": "Monthly budgets", "desc": "Set a limit, see your pace in real time, and know when you're close." },
+      "bilingual": { "title": "Arabic and English", "desc": "A full right-to-left Arabic experience, with amounts shown in the new Saudi Riyal symbol." },
+      "privacy": { "title": "Private by default", "desc": "Your data is encrypted and never sold. Delete it anytime with one tap." }
+    }
+  },
+  "How": {
+    "eyebrow": "How it works",
+    "title": "From statement to clarity in three steps",
+    "steps": {
+      "one": { "title": "Upload your statement", "desc": "Download a PDF from your banking app and drop it into Fatoorah." },
+      "two": { "title": "We sort everything", "desc": "Transactions are categorized and recurring payments detected automatically." },
+      "three": { "title": "Take control", "desc": "Track budgets, cancel what you don't use, and watch your savings grow." }
+    }
+  },
+  "Pricing": {
+    "eyebrow": "Pricing",
+    "title": "Simple pricing that pays for itself",
+    "subtitle": "Start free. Upgrade when Fatoorah saves you more than it costs.",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "save": "2 months free",
+    "perMonth": "/month",
+    "perYear": "/year",
+    "popular": "Most popular",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "desc": "For trying Fatoorah out.",
+        "cta": "Start free",
+        "features": ["2 statement uploads per month", "3 months of history", "Spending insights", "Arabic and English"]
+      },
+      "plus": {
+        "name": "Plus",
+        "desc": "For taking full control of your money.",
+        "cta": "Start Plus",
+        "features": ["Unlimited statement uploads", "Full transaction history", "Subscription renewal alerts", "Monthly budgets", "Export to CSV and PDF"]
+      },
+      "family": {
+        "name": "Family",
+        "desc": "For managing a household together.",
+        "cta": "Start Family",
+        "features": ["Everything in Plus", "Up to 5 members", "Shared household budget", "Priority support"]
+      }
+    },
+    "footnote": "Prices in Saudi Riyals and include VAT. Paid plans are coming soon; everything is free during early access."
+  },
+  "Faq": {
+    "title": "Frequently asked questions",
+    "items": {
+      "bank": { "q": "Do I need to give Fatoorah my bank password?", "a": "No. You upload a statement you downloaded yourself. We never ask for bank credentials." },
+      "banks": { "q": "Which banks are supported?", "a": "Any bank that issues PDF statements. Automatic bank sync through Saudi Open Banking is coming soon." },
+      "safe": { "q": "Is my data safe?", "a": "Data is encrypted in transit and at rest, access is limited to your account, and we never sell your information." },
+      "cancel": { "q": "Can I cancel anytime?", "a": "Yes. Paid plans can be cancelled at any time and you keep access until the end of the billing period." }
+    }
+  },
+  "Cta": {
+    "title": "Know where every riyal goes",
+    "subtitle": "Join early access and get Fatoorah free while we're in beta.",
+    "button": "Get started free"
+  },
+  "Footer": {
+    "tagline": "Personal finance, made clear. Built in Saudi Arabia.",
+    "product": "Product",
+    "company": "Company",
+    "legal": "Legal",
+    "about": "About",
+    "privacy": "Privacy policy",
+    "terms": "Terms of service",
+    "rights": "All rights reserved."
+  },
+  "SecurityPage": {
+    "title": "Security and privacy",
+    "subtitle": "How we protect your financial data.",
+    "items": {
+      "noCredentials": { "title": "No bank passwords", "desc": "Fatoorah works from statements you upload. We never see or store your banking login." },
+      "encryption": { "title": "Encrypted everywhere", "desc": "Data is encrypted in transit with TLS and stored encrypted at rest." },
+      "isolation": { "title": "Your data stays yours", "desc": "Row-level access rules mean only your account can read your transactions." },
+      "delete": { "title": "Delete anytime", "desc": "Clear imported data from the app whenever you want. We don't sell data, ever." }
+    }
+  },
+  "ContactPage": {
+    "title": "Get in touch",
+    "subtitle": "Questions, feedback, or partnership ideas? We'd love to hear from you.",
+    "name": "Name",
+    "email": "Email",
+    "message": "Message",
+    "send": "Send message",
+    "sent": "Thanks — we'll get back to you soon.",
+    "direct": "Or email us directly"
+  },
+  "BlogPage": {
+    "title": "Blog",
+    "subtitle": "Guides to spending smarter in Saudi Arabia.",
+    "soon": "Coming soon",
+    "posts": {
+      "subs": { "title": "How to find subscriptions you forgot about", "tag": "Guides" },
+      "budget": { "title": "A realistic monthly budget in riyals", "tag": "Budgeting" },
+      "statement": { "title": "How to download your bank statement as a PDF", "tag": "How-to" }
+    }
+  },
+  "FeaturesPage": {
+    "title": "Features",
+    "subtitle": "A closer look at everything Fatoorah does for your money."
+  }
+}
