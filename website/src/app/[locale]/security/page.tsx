@@ -27,7 +27,7 @@ export default async function SecurityPage({ params }: PageProps<"/[locale]/secu
       <section className="mx-auto grid max-w-5xl gap-5 px-5 py-20 sm:grid-cols-2 lg:px-8">
         {ITEMS.map(({ key, icon: Icon }, i) => (
           <Reveal key={key} delay={i * 0.06}>
-            <div className="h-full rounded-2xl border border-line bg-white p-7">
+            <div className="h-full rounded-2xl border border-line bg-surface p-7">
               <span className="grid size-12 place-items-center rounded-xl bg-brand-soft text-brand">
                 <Icon className="size-6" />
               </span>

@@ -25,7 +25,7 @@ export default function Hero() {
       {/* Backdrop: soft brand glow over a faint grid */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="absolute -top-40 start-1/2 h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(67,181,129,0.22),transparent)] rtl:translate-x-1/2" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(23,33,30,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(23,33,30,0.05)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(23,33,30,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(23,33,30,0.05)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]" />
       </div>
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-14 px-5 pb-20 pt-14 lg:grid-cols-[1fr_1.1fr] lg:px-8 lg:pb-28 lg:pt-20">
@@ -52,14 +52,14 @@ export default function Hero() {
           <motion.div {...enter(0.24)} className="mt-9 flex flex-wrap items-center gap-3">
             <a
               href={APP_URL}
-              className="group inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-3.5 font-semibold text-white shadow-lg shadow-brand/25 transition-all hover:-translate-y-0.5 hover:bg-brand-hover"
+              className="group inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-3.5 font-semibold text-on-brand shadow-lg shadow-brand/25 transition-all hover:-translate-y-0.5 hover:bg-brand-hover"
             >
               {t("primary")}
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
             </a>
             <a
               href="#how"
-              className="inline-flex items-center rounded-xl border border-line bg-white px-6 py-3.5 font-semibold text-ink transition-colors hover:bg-surface-alt"
+              className="inline-flex items-center rounded-xl border border-line bg-surface px-6 py-3.5 font-semibold text-ink transition-colors hover:bg-surface-alt"
             >
               {t("secondary")}
             </a>

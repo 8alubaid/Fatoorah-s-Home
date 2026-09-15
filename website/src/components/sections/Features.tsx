@@ -23,9 +23,9 @@ export default function Features({ showHeading = true }: { showHeading?: boolean
           <Reveal key={key} delay={i * 0.06}>
             <article
               id={key}
-              className="group h-full scroll-mt-24 rounded-2xl border border-line bg-white p-7 transition-all duration-300 hover:-translate-y-1 hover:border-brand/30 hover:shadow-xl hover:shadow-brand/5"
+              className="group h-full scroll-mt-24 rounded-2xl border border-line bg-surface p-7 transition-all duration-300 hover:-translate-y-1 hover:border-brand/30 hover:shadow-xl hover:shadow-brand/5"
             >
-              <span className="grid size-12 place-items-center rounded-xl bg-brand-soft text-brand transition-colors group-hover:bg-brand group-hover:text-white">
+              <span className="grid size-12 place-items-center rounded-xl bg-brand-soft text-brand transition-colors group-hover:bg-brand group-hover:text-on-brand">
                 <Icon className="size-6" />
               </span>
               <h3 className="mt-5 text-lg font-semibold text-ink">{t(`items.${key}.title`)}</h3>

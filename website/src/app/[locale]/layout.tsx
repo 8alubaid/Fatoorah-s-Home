@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Script from "next/script";
 import { Inter, IBM_Plex_Sans_Arabic } from "next/font/google";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { routing, isRtl } from "@/i18n/routing";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { THEME_SCRIPT } from "@/lib/theme";
 import "../globals.css";
 
 // Self-hosted at build time by next/font — no request to Google from visitors.
@@ -38,8 +40,18 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   setRequestLocale(locale);
 
   return (
-    <html lang={locale} dir={isRtl(locale) ? "rtl" : "ltr"} className={`${inter.variable} ${arabic.variable}`}>
+    <html
+      lang={locale}
+      dir={isRtl(locale) ? "rtl" : "ltr"}
+      className={`${inter.variable} ${arabic.variable}`}
+      // The head script adds `dark` before React hydrates.
+      suppressHydrationWarning
+    >
       <body className="min-h-screen flex flex-col">
+        {/* Injected into <head> and run before hydration: sets the theme class with no flash. */}
+        <Script id="theme-init" strategy="beforeInteractive">
+          {THEME_SCRIPT}
+        </Script>
         <NextIntlClientProvider>
           <Navbar />
           <main className="flex-1">{children}</main>

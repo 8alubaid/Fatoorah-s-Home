@@ -25,13 +25,13 @@ export default function DashboardMockup() {
     .join(", ");
 
   return (
-    <div className="w-[640px] overflow-hidden rounded-2xl border border-line bg-white shadow-[0_30px_70px_-30px_rgba(11,33,25,0.35)]">
+    <div className="w-[640px] overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_30px_70px_-30px_rgba(11,33,25,0.35)]">
       {/* Window chrome */}
       <div className="flex items-center gap-1.5 border-b border-line bg-surface-alt/60 px-4 py-2.5">
         <span className="size-2.5 rounded-full bg-[#ff5f57]" />
         <span className="size-2.5 rounded-full bg-[#febc2e]" />
         <span className="size-2.5 rounded-full bg-[#28c840]" />
-        <span className="ms-4 flex h-6 flex-1 items-center gap-1.5 rounded-md bg-white px-2 text-[10px] text-faint">
+        <span className="ms-4 flex h-6 flex-1 items-center gap-1.5 rounded-md bg-surface px-2 text-[10px] text-faint">
           <Search className="size-3" /> app.fatoorah.com
         </span>
       </div>
@@ -73,7 +73,7 @@ export default function DashboardMockup() {
               { label: t("transactions"), node: "128" },
               { label: t("subscriptions"), node: "6" },
             ].map((s) => (
-              <div key={s.label} className="rounded-xl border border-line bg-white p-2.5">
+              <div key={s.label} className="rounded-xl border border-line bg-surface p-2.5">
                 <p className="text-[9px] text-faint">{s.label}</p>
                 <p className="mt-1 text-[15px] font-bold text-ink">{s.node}</p>
               </div>
@@ -81,7 +81,7 @@ export default function DashboardMockup() {
           </div>
 
           <div className="mt-2.5 grid grid-cols-[1.55fr_1fr] gap-2.5">
-            <div className="rounded-xl border border-line bg-white p-3">
+            <div className="rounded-xl border border-line bg-surface p-3">
               <p className="text-[10px] font-semibold text-ink">{t("spending")}</p>
               <div className="mt-3 flex h-24 items-end gap-1.5">
                 {MONTHS.map((h, i) => (
@@ -94,11 +94,11 @@ export default function DashboardMockup() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-line bg-white p-3">
+            <div className="rounded-xl border border-line bg-surface p-3">
               <p className="text-[10px] font-semibold text-ink">{t("categories")}</p>
               <div className="mt-2 flex items-center gap-2.5">
                 <div className="relative size-16 shrink-0 rounded-full" style={{ background: `conic-gradient(${donut})` }}>
-                  <div className="absolute inset-[9px] rounded-full bg-white" />
+                  <div className="absolute inset-[9px] rounded-full bg-surface" />
                 </div>
                 <ul className="space-y-1">
                   {categories.slice(0, 4).map((c) => (
@@ -113,12 +113,12 @@ export default function DashboardMockup() {
           </div>
 
           {/* Trend line */}
-          <div className="mt-2.5 rounded-xl border border-line bg-white p-3">
-            <svg viewBox="0 0 400 60" className="h-12 w-full" preserveAspectRatio="none">
+          <div className="mt-2.5 rounded-xl border border-line bg-surface p-3">
+            <svg viewBox="0 0 400 60" className="h-12 w-full text-brand" preserveAspectRatio="none">
               <defs>
                 <linearGradient id="dm-fill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#147a52" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#147a52" stopOpacity="0" />
+                  <stop offset="0%" stopColor="currentColor" stopOpacity="0.25" />
+                  <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
                 </linearGradient>
               </defs>
               <path
@@ -128,7 +128,7 @@ export default function DashboardMockup() {
               <path
                 d="M0,42 C40,38 60,20 100,26 C140,32 160,48 200,40 C240,32 260,12 300,18 C340,24 360,34 400,22"
                 fill="none"
-                stroke="#147a52"
+                stroke="currentColor"
                 strokeWidth="2"
               />
             </svg>

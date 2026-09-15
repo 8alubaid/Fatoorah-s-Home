@@ -15,7 +15,7 @@ export default function Cta() {
           <p className="relative mx-auto mt-4 max-w-xl text-lg text-white/75">{t("subtitle")}</p>
           <a
             href={APP_URL}
-            className="group relative mt-9 inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 font-semibold text-brand shadow-xl transition-all hover:-translate-y-0.5"
+            className="group relative mt-9 inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 font-semibold text-[#147a52] shadow-xl transition-all hover:-translate-y-0.5"
           >
             {t("button")}
             <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5 rtl:rotate-180" />

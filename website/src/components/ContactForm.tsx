@@ -22,10 +22,10 @@ export default function ContactForm() {
   };
 
   const field =
-    "mt-2 w-full rounded-xl border border-line bg-white px-4 py-3 text-ink outline-none transition focus:border-brand focus:ring-4 focus:ring-brand/10";
+    "mt-2 w-full rounded-xl border border-line bg-surface px-4 py-3 text-ink outline-none transition focus:border-brand focus:ring-4 focus:ring-brand/10";
 
   return (
-    <form onSubmit={onSubmit} className="rounded-3xl border border-line bg-white p-8 shadow-sm">
+    <form onSubmit={onSubmit} className="rounded-3xl border border-line bg-surface p-8 shadow-sm">
       <div className="grid gap-5 sm:grid-cols-2">
         <label className="block text-sm font-medium text-ink">
           {t("name")}
@@ -42,7 +42,7 @@ export default function ContactForm() {
       </label>
       <button
         type="submit"
-        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-3.5 font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-brand-hover"
+        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-3.5 font-semibold text-on-brand transition-all hover:-translate-y-0.5 hover:bg-brand-hover"
       >
         <Send className="size-4 rtl:-scale-x-100" />
         {t("send")}

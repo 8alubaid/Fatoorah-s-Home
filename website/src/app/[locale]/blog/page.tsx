@@ -4,9 +4,9 @@ import PageHeader from "@/components/PageHeader";
 import Reveal from "@/components/Reveal";
 
 const POSTS = [
-  { key: "subs", hue: "from-violet-100 to-violet-50" },
-  { key: "budget", hue: "from-emerald-100 to-emerald-50" },
-  { key: "statement", hue: "from-amber-100 to-amber-50" },
+  { key: "subs", hue: "from-violet-100 to-violet-50 dark:from-violet-500/25 dark:to-violet-500/5" },
+  { key: "budget", hue: "from-emerald-100 to-emerald-50 dark:from-emerald-500/25 dark:to-emerald-500/5" },
+  { key: "statement", hue: "from-amber-100 to-amber-50 dark:from-amber-500/25 dark:to-amber-500/5" },
 ] as const;
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/blog">) {
@@ -26,7 +26,7 @@ export default async function BlogPage({ params }: PageProps<"/[locale]/blog">) 
       <section className="mx-auto grid max-w-6xl gap-6 px-5 py-20 md:grid-cols-3 lg:px-8">
         {POSTS.map(({ key, hue }, i) => (
           <Reveal key={key} delay={i * 0.08}>
-            <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white">
+            <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-surface">
               <div className={`aspect-[16/10] bg-gradient-to-br ${hue}`} />
               <div className="flex flex-1 flex-col p-6">
                 <div className="flex items-center justify-between text-xs">

@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { BellRing, ChartPie, ChevronDown, FileText, Globe, Menu, PiggyBank, X } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
 import Logo from "./Logo";
+import ThemeToggle from "./ThemeToggle";
 import { APP_URL } from "@/lib/config";
 
 const FEATURE_ITEMS = [
@@ -86,7 +87,7 @@ export default function Navbar() {
   return (
     <header
       className={`sticky top-0 z-50 transition-all duration-300 ${
-        scrolled ? "border-b border-line bg-white/80 backdrop-blur-xl" : "border-b border-transparent bg-transparent"
+        scrolled ? "border-b border-line bg-surface/80 backdrop-blur-xl" : "border-b border-transparent bg-transparent"
       }`}
     >
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-5 lg:px-8">
@@ -115,7 +116,7 @@ export default function Navbar() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 6, scale: 0.98 }}
                   transition={{ duration: 0.18, ease: "easeOut" }}
-                  className="absolute start-0 top-full mt-3 w-[420px] rounded-2xl border border-line bg-white p-2 shadow-xl shadow-black/5"
+                  className="absolute start-0 top-full mt-3 w-[420px] rounded-2xl border border-line bg-surface p-2 shadow-xl shadow-black/5"
                 >
                   {FEATURE_ITEMS.map(({ key, icon: Icon }) => (
                     <Link
@@ -145,6 +146,7 @@ export default function Navbar() {
         </div>
 
         <div className="hidden items-center gap-2 lg:flex">
+          <ThemeToggle />
           <Link
             href={pathname}
             locale={otherLocale}
@@ -158,21 +160,24 @@ export default function Navbar() {
           </a>
           <a
             href={APP_URL}
-            className="rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-brand/30 transition-all hover:-translate-y-px hover:bg-brand-hover"
+            className="rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-on-brand shadow-sm shadow-brand/30 transition-all hover:-translate-y-px hover:bg-brand-hover"
           >
             {t("getStarted")}
           </a>
         </div>
 
-        <button
-          type="button"
-          className="grid size-10 place-items-center rounded-lg text-ink hover:bg-surface-alt lg:hidden"
-          aria-label={t("menu")}
-          aria-expanded={mobileOpen}
-          onClick={() => setMobileOpen((o) => !o)}
-        >
-          {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-        </button>
+        <div className="flex items-center gap-1 lg:hidden">
+          <ThemeToggle />
+          <button
+            type="button"
+            className="grid size-10 place-items-center rounded-lg text-ink hover:bg-surface-alt"
+            aria-label={t("menu")}
+            aria-expanded={mobileOpen}
+            onClick={() => setMobileOpen((o) => !o)}
+          >
+            {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
+        </div>
       </nav>
 
       <AnimatePresence>
@@ -182,7 +187,7 @@ export default function Navbar() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.22 }}
-            className="overflow-hidden border-t border-line bg-white lg:hidden"
+            className="overflow-hidden border-t border-line bg-surface lg:hidden"
           >
             <div className="flex flex-col gap-1 px-5 py-4">
               <Link href="/features" className="rounded-lg px-3 py-3 font-medium text-ink hover:bg-surface-alt">
@@ -197,7 +202,7 @@ export default function Navbar() {
                 <Globe className="size-4" />
                 {t("language")}
               </Link>
-              <a href={APP_URL} className="mt-2 rounded-xl bg-brand px-4 py-3 text-center font-semibold text-white">
+              <a href={APP_URL} className="mt-2 rounded-xl bg-brand px-4 py-3 text-center font-semibold text-on-brand">
                 {t("getStarted")}
               </a>
             </div>

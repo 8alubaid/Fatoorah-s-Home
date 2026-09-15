@@ -12,7 +12,7 @@ export default function HowItWorks() {
   const t = useTranslations("How");
 
   return (
-    <section id="how" className="scroll-mt-20 border-y border-line bg-white">
+    <section id="how" className="scroll-mt-20 border-y border-line bg-surface">
       <div className="mx-auto max-w-7xl px-5 py-24 lg:px-8">
         <SectionHeading eyebrow={t("eyebrow")} title={t("title")} />
 
@@ -22,9 +22,9 @@ export default function HowItWorks() {
           {STEPS.map(({ key, icon: Icon }, i) => (
             <Reveal key={key} delay={i * 0.12}>
               <li className="relative text-center">
-                <span className="relative mx-auto grid size-14 place-items-center rounded-2xl border border-line bg-white text-brand shadow-sm">
+                <span className="relative mx-auto grid size-14 place-items-center rounded-2xl border border-line bg-surface text-brand shadow-sm">
                   <Icon className="size-6" />
-                  <span className="absolute -end-2 -top-2 grid size-6 place-items-center rounded-full bg-brand text-xs font-bold text-white">
+                  <span className="absolute -end-2 -top-2 grid size-6 place-items-center rounded-full bg-brand text-xs font-bold text-on-brand">
                     {i + 1}
                   </span>
                 </span>

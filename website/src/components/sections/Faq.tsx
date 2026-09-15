@@ -15,7 +15,7 @@ export default function Faq() {
   return (
     <section className="mx-auto max-w-3xl px-5 py-24 lg:px-8">
       <SectionHeading title={t("title")} />
-      <div className="mt-12 divide-y divide-line rounded-2xl border border-line bg-white">
+      <div className="mt-12 divide-y divide-line rounded-2xl border border-line bg-surface">
         {KEYS.map((key) => {
           const isOpen = open === key;
           return (

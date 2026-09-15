@@ -26,7 +26,7 @@ export default function Pricing({ showHeading = true }: { showHeading?: boolean 
 
       {/* Billing toggle */}
       <div className="mt-10 flex justify-center">
-        <div className="relative inline-flex rounded-full border border-line bg-white p-1" role="tablist">
+        <div className="relative inline-flex rounded-full border border-line bg-surface p-1" role="tablist">
           {[false, true].map((isYearly) => {
             const active = yearly === isYearly;
             return (
@@ -37,7 +37,7 @@ export default function Pricing({ showHeading = true }: { showHeading?: boolean 
                 aria-selected={active}
                 onClick={() => setYearly(isYearly)}
                 className={`relative z-10 flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
-                  active ? "text-white" : "text-muted hover:text-ink"
+                  active ? "text-on-brand" : "text-muted hover:text-ink"
                 }`}
               >
                 {active ? (
@@ -51,7 +51,7 @@ export default function Pricing({ showHeading = true }: { showHeading?: boolean 
                 {isYearly ? (
                   <span
                     className={`rounded-full px-2 py-0.5 text-[11px] ${
-                      active ? "bg-white/20 text-white" : "bg-brand-soft text-brand"
+                      active ? "bg-on-brand/15 text-on-brand" : "bg-brand-soft text-brand"
                     }`}
                   >
                     {t("save")}
@@ -73,12 +73,12 @@ export default function Pricing({ showHeading = true }: { showHeading?: boolean 
               <div
                 className={`relative flex h-full flex-col rounded-3xl border p-8 transition-shadow ${
                   popular
-                    ? "border-brand bg-[#0b1110] text-white shadow-2xl shadow-brand/20 lg:-my-4 lg:py-12"
-                    : "border-line bg-white hover:shadow-lg"
+                    ? "border-brand bg-[#0b1110] text-white dark:bg-surface-alt shadow-2xl shadow-brand/20 lg:-my-4 lg:py-12"
+                    : "border-line bg-surface hover:shadow-lg"
                 }`}
               >
                 {popular ? (
-                  <span className="absolute -top-3.5 start-1/2 -translate-x-1/2 rounded-full bg-brand px-4 py-1 text-xs font-semibold text-white rtl:translate-x-1/2">
+                  <span className="absolute -top-3.5 start-1/2 -translate-x-1/2 rounded-full bg-brand px-4 py-1 text-xs font-semibold text-on-brand rtl:translate-x-1/2">
                     {t("popular")}
                   </span>
                 ) : null}
@@ -107,7 +107,7 @@ export default function Pricing({ showHeading = true }: { showHeading?: boolean 
                     <li key={f} className="flex items-start gap-3 text-sm">
                       <span
                         className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full ${
-                          popular ? "bg-brand text-white" : "bg-brand-soft text-brand"
+                          popular ? "bg-brand text-on-brand" : "bg-brand-soft text-brand"
                         }`}
                       >
                         <Check className="size-3.5" strokeWidth={3} />
@@ -120,7 +120,7 @@ export default function Pricing({ showHeading = true }: { showHeading?: boolean 
                 <a
                   href={APP_URL}
                   className={`mt-10 block rounded-xl px-5 py-3.5 text-center font-semibold transition-all hover:-translate-y-0.5 ${
-                    popular ? "bg-brand text-white hover:bg-[#1a8f60]" : "border border-line bg-white text-ink hover:bg-surface-alt"
+                    popular ? "bg-brand text-on-brand hover:bg-brand-hover" : "border border-line bg-surface text-ink hover:bg-surface-alt"
                   }`}
                 >
                   {t(`plans.${plan.key}.cta`)}
